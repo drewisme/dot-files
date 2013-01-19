@@ -26,6 +26,7 @@ alias sscloud="ssh 108.171.190.242"
 alias iceman="ssh iceman.sidestudios.com"
 alias maverick="ssh maverick.sidestudios.com"
 alias goose="ssh goose.sidestudios.com"
+alias sidedev="ssh 192.168.0.50"
 
 # Command History 
 export HISTCONTROL=ignoredups:erasedups
