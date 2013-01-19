@@ -23,6 +23,9 @@ alias phperrors="find . -type f -name '*.php' -or -name '*.ctp' -exec php -l {} 
 alias ccidev="ssh devsite.cc"
 alias ssprod="ssh 192.168.100.206"
 alias sscloud="ssh 108.171.190.242"
+alias iceman="ssh iceman.sidestudios.com"
+alias maverick="ssh maverick.sidestudios.com"
+alias goose="ssh goose.sidestudios.com"
 
 # Command History 
 export HISTCONTROL=ignoredups:erasedups
