@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<?php echo $this->element('meta') ?>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta name="author" content="<?php echo Configure::read('Setting.Company.name'); ?>">
+
+		<?php echo $this->fetch('meta') ?>
+		<?php echo $this->Html->css(array('bootstrap', 'bootstrap-responsive', 'uniform-hpi', '/js/fancybox/jquery.fancybox', 'all')) ?>
+		<?php echo $this->fetch('css') ?>
+		<?php echo $this->fetch('auto_asset_css'); ?>
+
+		<!--[if lt IE 9]>
+			<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+
+		<!-- <link rel="shortcut icon" href=""> -->
+	</head>
+
+	<body class="controller-<?php echo $this->request->params['controller']?> action-<?php echo $this->request->params['action']?>">
+		<header>
+			<div class="topnav container">
+				<div class="pull-left">
+                                        <a href="#" class="more-hpi">Visit Other <?php echo Configure::read('Setting.Company.name'); ?> Websites</a>
+				</div>
+				<div class="pull-right">
+					<ul class="unstyled">
+                                        <li class="social hidden-phone"><a href="http://twitter.com/OfficialHPI"><img src="/theme/<?php echo $this->theme; ?>/img/icon-twitter-16.png" width="16" height="16" alt="Twitter"/></a></li>
+						<li class="social hidden-phone"><a href="https://www.facebook.com/OfficialHPI"><img src="/theme/HPI/img/icon-facebook-16.png" width="16" height="16" alt="Facebook"/></a></li>
+						<li class="social sep hidden-phone"><a href="http://www.youtube.com/user/OfficialHPI"><img src="/theme/HPI/img/icon-youtube-16.png" width="16" height="16" alt="YouTube"/></a></li>
+						<li class="hidden-phone"><a href="#">Gift Cards</a></li>
+						<li class="sep hidden-phone"><a href="<?php echo $this->Html->url(array('controller' => 'carts', 'action' => 'wishlist'))?>" data-count="<?=$this->Session->read('Wishlist.count')?>">Wish List <span class="wishlist-count"></span></a></li>
+						<li class="hidden-phone"><a href="#">Dealers</a></li>
+						<li><a href="<?php echo $this->Html->url(array('controller' => 'customers', 'action' => 'index'))?>">My Account</a></li>
+						<li><a href="<?php echo $this->Html->url(array('controller' => 'carts', 'action' => 'index'))?>" data-count="<?=$this->Session->read('Cart.count')?>">Cart <span class="cart-count"></span></a></li>
+					</ul>
+				</div>
+			</div>
+			
+			<?php echo $this->element('nav') ?>
+
+			<div class="breadcrumbs-wrapper">
+				<div class="container">
+					<?php echo $this->Crumb->makeCrumbs('breadcrumbs unstyled pull-left'); ?>
+					<span class="instock pull-right"><em><?php echo $this->Number->toPercentage(100 * $allProductsInStock, 0); ?></em> of all products currently in stock!</span>
+				</div>
+			</div>
+		</header>
+
+		<?php echo $this->fetch('content') ?>
+
+		<footer>
+			<div class="container">
+				<a href="#" class="gototop pull-right">TOP</a>
+				<ul class="unstyled social-list addthis_toolbox">
+					<li class="sep"><img src="/theme/HPI/img/icon-map.png" width="61" height="25" alt="Region Map"/> <a href="#" class="change-region">Change Region</a></li>
+					<li class="hidden-phone" class="sep"><a href="#" class="newsletter-sign-up">Newsletter Sign Up</a></li>
+					<li class="hidden-phone hidden-tablet"><a href="http://twitter.com/OfficialHPI"><img src="/theme/HPI/img/icon-twitter-16.png" width="16" height="16" alt="Twitter"/> Twitter</a></li>
+					<li class="hidden-phone hidden-tablet"><a href="https://www.facebook.com/OfficialHPI"><img src="/theme/HPI/img/icon-facebook-16.png" width="16" height="16" alt="Facebook"/> Facebook</a></li>
+					<li class="hidden-phone hidden-tablet"><a href="http://www.youtube.com/user/OfficialHPI"><img src="/theme/HPI/img/icon-youtube-16.png" width="16" height="16" alt="YouTube"/> YouTube</a></li>
+				</ul>
+				<div class="footer-logo">
+                                <a href="#" class="hidden-phone"><img src="/theme/HPI/img/logo-hpi.png" width="190" height="53" alt="<?php echo Configure::read('Setting.Company.name'); ?>" /></a>
+				</div>
+				<ul class="unstyled footer-links">
+					<li><a href="<?php echo $this->Html->url(array('controller' => 'cms_pages', 'action' => 'display', 'about', 'what-is-rc')); ?>">What is RC?</a></li>
+					<li><a href="<?php echo $this->Html->url(array('controller' => 'cms_pages', 'action' => 'display', 'about')); ?>">Company Info</a></li>
+					<li><a href="<?php echo $this->Html->url(array('controller' => 'cms_pages', 'action' => 'display', 'legal', 'terms-and-conditions')); ?>">Terms and Conditions</a></li>
+					<li><a href="/sitemap">Sitemap</a></li>
+					<li><a href="<?php echo $this->Html->url(array('controller' => 'cms_pages', 'action' => 'display', 'legal', 'privacy-policy')); ?>">Privacy Policy</a></li>
+					<li><a href="<?php echo $this->Html->url(array('controller' => 'cms_pages', 'action' => 'display', 'support')); ?>">Support</a></li>
+					<li><a href="<?php echo $this->Html->url(array('controller' => 'cms_pages', 'action' => 'display', 'about', 'history')); ?>">History</a></li>
+					<!-- <li><a href="#">Links</a></li> -->
+					<li><a href="<?php echo $this->Html->url(array('controller' => 'cms_pages', 'action' => 'display', 'support', 'faq')); ?>">FAQ</a></li>
+                                        <li><a href="<?php echo $this->Html->url(array('controller' => 'cms_pages', 'action' => 'display', 'about', 'jobs')); ?>">Jobs at <?php echo Configure::read('Setting.Company.name'); ?></a></li>
+				</ul>
+                                <p class="copyright">Copyright <?php echo date('Y'); ?> <?php echo Configure::read('Setting.Company.name'); ?>. All rights reserved. Images may not be used without express written permission.</p>
+			</div>
+		</footer>
+
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+		<script>window.jQuery || document.write('<script src="/js/libs/jquery-1.8.2.min.js"><\/script>')</script>
+
+		<?php echo $this->fetch('script') ?>
+		
+		<?php echo $this->Html->script(array('bootstrap', 'jquery.uniform.min', '/js/fancybox/jquery.fancybox.pack', '/js/fancybox/helpers/jquery.fancybox-media.js', 'jquery.scrollgallery.js', 'jquery.main', 'underscore-min')) ?>
+
+		<?php echo $this->fetch('auto_asset_js'); ?>
+
+                <script type="text/javascript" src="http://s7.addthis.com/js/300/addthis_widget.js#pubid=xa-506a182038c73429"></script>
+                
+                <script type="text/javascript">
+
+                  var _gaq = _gaq || [];
+                  _gaq.push(['_setAccount', 'UA-36648759-1']);
+                  _gaq.push(['_trackPageview']);
+                
+                  (function() {
+                    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+                  })();
+                
+                </script>
+
+		<?php //echo $this->element('sql_dump'); ?>
+		
+		<script type="text/template" id="search-results-wrapper-template">
+			<div id="search-results-products" class="clearfix">
+				<span class="section-title">Products</span>
+				<%= products %>
+			</div>
+			<div id="search-results-cmsPosts" class="clearfix">
+				<span class="section-title">Community</span>
+				<%= cmsPosts %>
+			</div>
+			<div id="search-results-cmsPages" class="clearfix">
+				<span class="section-title">Pages</span>
+				<%= cmsPages %>
+			</div>
+			<div id="search-results-noresults" class="clearfix">
+				<span class="section-title">No Results</span>
+			</div>
+		</script>
+		
+		<script type="text/template" id="search-results-products-template">
+			<div class="search-item" id="Product-<%= Product.id %>">
+				<a href="<%= Product.url %>">
+					<img src="<%= Product.image %>" alt="<%- Product.name %> Image" class="pull-left" />
+					<img src="/theme/HPI/img/sale-triangle.png" class="<%= Product.sale_status %> sale-triangle" />
+					<div class="item-text">
+						<span class="title"><%= Product.tease %></span>
+						<span class="price"><span class="regular-price <%= Product.sale_status %>">$<%= Product.price %></span> $<%= Product.current_price %></span>
+					</div>
+				</a>
+			</div>
+		</script>
+		
+		<script type="text/template" id="search-results-cmsPosts-template">
+			<div class="search-item" id="cmsPost-<%= CmsPost.id %>">
+				<a href="<%= CmsPost.url %>">
+					<img src="<%= CmsPost.image %>" alt="<%- CmsPost.name %> Image" class="pull-left" />
+					<div class="item-text">
+						<span class="title"><%= CmsPost.tease %></span>
+						<span class="publish_date"><%= CmsPost.publish_date %></span>
+					</div>
+				</a>
+			</div>
+		</script>
+		
+		<script type="text/template" id="search-results-cmsPages-template">
+			<div class="search-item" id="cmsPage-<%= CmsPage.id %>">
+				<a href="<%= CmsPage.url %>">
+					<div class="item-text">
+						<span class="title"><%= CmsPage.tease %></span>
+					</div>
+				</a>
+			</div>
+		</script>
+		
+		<!-- <?php echo number_format(microtime(true) - $_SERVER['REQUEST_TIME'], 3); ?> -->
+	</body>
+</html>

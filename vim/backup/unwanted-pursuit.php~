@@ -1,0 +1,66 @@
+		<?php 
+
+			$meta['title'] = '';
+			$meta['keywords'] = '';
+			$meta['description'] = '';
+			
+			include APP_PATH . 'inc/header.php';
+		
+		?>
+			<!-- block-in -->
+			<div class="block-in">
+				<div class="holder">
+					<div class="container">
+						<div class="decor"></div>
+						<!-- section -->
+						<div class="section">
+							<!-- content -->
+							<div class="content">
+								<!-- head-line -->
+								<h2 class="head-line large">
+									<span class="row"><mark>GET HELP</mark></span> 
+									<span class="holder indent">
+										<span class="row"><mark>UNWANTED PURSUIT</mark></span>
+									</span>
+								</h2>
+								<!-- simple-area -->
+								<div class="simple-area">
+                                	<section class="text">
+                                    	<header><h2>WHAT IS UNWANTED PURSUIT</h2></header>
+                                        <p><strong>Stalking</strong> or unwanted pursuit is a crime under the laws of all 50 states. Any person who willfully, maliciously, and repeatedly follows or harasses another person and who makes a credible threat with the intent to place that person in reasonable fear for his or her safety, or the safety of his or her immediate family is guilty of the crime of stalking. If you suspect you are being stalked pleasecontact  <a href="contact">Laura's House</a> for help.<br /><br /></p>
+                                        <p>With technology advances the abuser can stalk, pursue, and bully the victim without leaving the comfort of home.</p>
+                                    </section>
+                                 </div>
+                                 <div class="simple-area" style="background: none;">
+                                 	<section class="text">
+                                    	<header><h2>Types of Unwanted Pursuit:</h2></header>
+                                        <p>A restraining order (sometimes called a protection order) is legal document which is signed by a judge and tells your abuser to stop the abuse or face serious legal consequences. It offers protection from abuse to both girl and boy victims. </p>
+                                        <div style="padding-left: 20px;">
+                                        	<header><h3>Cyberbullying</h3></header>
+                                            <p>"Cyberbullying" is when a minor child, preteen or teen is tormented, threatened, harassed, humiliated, embarrassed or otherwise targeted by another minor child, preteen or teen using the Internet, interactive and digital technologies or mobile phones. </p>
+                                            <header><h3>Cyberstalking</h3></header>
+                                            <p>"Cyberstalking" Once adults become involved, it is plain and simple cyber-harassment or cyberstalking. Adult cyber-harassment or cyberstalking is NEVER called cyberbullying.</p>
+                                            <header><h3>Textual-Harassment</h3></header>
+                                            <p>Textual-Harassment is receiving hateful or threatening messages via text.</p>
+                                            <header><h3>Text wars or text attacks</h3></header>
+                                            <p>Text wars or text attacks are when kids gang up on the victim, sending thousands of text-messages to the victim's cell phone or other mobile device. The victim is then faced with a huge cell phone bill and angry parents.</p>
+                                            <header><h3>Blogs</h3></header>
+                                            <p>Blogs are online journals. They are a fun way for kids and teens to send messages for all of their friends to see. However, kids sometimes use these blogs to damage other kids' reputations or invade their privacy. For example, in one case, a boy posted a bunch of blogs about his breakup with his ex-girlfriend, explaining how she destroyed his life, calling her degrading names. Their mutual friends read about this and criticized her. She was embarrassed and hurt, all because another kid posted mean, private, and false information about her.</p>
+                                            <header><h3>Websites </h3></header>
+                                            <p>Teens sometimes create Web sites that may insult or endanger another teen. They create pages specifically designed to insult another teen or group of people. Kids also post other kids' personal information and pictures.</p>
+                                            <header><h3>Sending Pictures through E-mail and Cell Phones </h3></header>
+                                            <p>Many of the newer cell phones allow kids to send pictures to each other. The kids receive the pictures directly on their phones, and may send it to everyone in their address books.  Kids often take a picture of someone in a locker room, bathroom or dressing room and post it online or send it to others on cell phones. </p>
+                                            <header><h3>Internet Polling</h3></header>
+                                            <p>Who's Hot? Who's Not? These types of questions run rampant on the Internet polls, all created by teens. Such questions are often very offensive to others and are yet another way that teens can "bully" other teens online. </p>
+                                            <header><h3>Sending Malicious Code </h3></header>
+                                            <p>Many kids will send viruses, spyware and hacking programs to their victims. They do this to either destroy their computers or spy on their victim. Trojan Horse programs allow the cyberbully to control their victim's computer remote control, and can be used to erase the hard drive of the victim. </p>
+                                        </div>
+                                   </section>
+								</div>
+							</div> 
+							<!-- aside -->
+							<?php include APP_PATH . 'inc/gethelp-side.php' ?>
+						</div>
+					</div>
+				</div>
+			</div>

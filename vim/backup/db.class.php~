@@ -1,0 +1,1420 @@
+<?php
+class db
+{
+	private $connection;
+	private $server;
+	private $username;
+	private $password;
+	private $database;
+	private $resource;
+	private $tables;
+	private $columns;
+	private $chain;
+	public $statistics;
+	public $errors;
+
+	/**
+	 * This method constructs a cci_db object and also connects the object to the database.
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param string $server   (ex: localhost)
+	 * @param string $username (ex: scott)
+	 * @param string $password (ex: mypass)
+	 * @param string $database (ex: cci_web)
+	 * @return cci_db
+	 *
+	 * @example $db = new cci_db('localhost', 'scott', 'mypass', 'cci_web');
+	 */
+	function __construct($server, $username, $password, $database)
+	{
+		$this->statistics['start'] = $this->timer();
+		$this->server   = $server;
+		$this->username = $username;
+		$this->password = $password;
+		$this->database = $database;
+		$this->connect();
+	}
+
+	/**
+	 * This method actually connects the class to the database
+	 *
+	 * @author Scott Roach
+	 * @internal
+	 *
+	 * @return boolean
+	 *
+	 * @example $this->connect();
+	 */
+	function connect()
+	{
+		if(isset($this->server) && isset($this->username) && isset($this->password) && isset($this->database))
+		{
+			$this->connection = mysql_connect($this->server, $this->username, $this->password, true);
+			if($this->connection)
+			{
+				if(mysql_select_db($this->database, $this->connection))
+				{
+					return true;
+				}
+				else
+				{
+					$this->add_error(mysql_error($this->connection), __FILE__, __LINE__);
+					return false;
+				}
+			}
+			else
+			{
+				$this->add_error(mysql_error($this->connection), __FILE__, __LINE__);
+				return false;
+			}
+		}
+		$this->add_error('Database credentials are not set', __FILE__, __LINE__);
+		return false;
+	}
+
+	/**
+	 * This method will add an error to the internal error handler
+	 *
+	 * @author Scott Roach
+	 * @internal
+	 *
+	 * @param string $error (ex: MySQL is not connected)
+	 * @param string $file  (ex: __FILE__)
+	 * @param string $line  (ex: __LINE__)
+	 * @param string $type  (ex: E_USER_ERROR) optional
+	 *
+	 * @example $this->add_error("MySQL is not connected", __FILE__, __LINE__);
+ 	 */
+	function add_error($error, $file, $line, $type=E_USER_ERROR)
+	{
+		$this->errors[] = array(
+									'error' => $error,
+									'line'	=> $line,
+									'file'	=> $file,
+									'type'	=> $type
+								);
+	}
+
+	/**
+	 * This method will change the selected database to query off of.
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param string $database (ex: cci_web)
+	 * @return boolean
+	 *
+	 * @example $db->change_db('cci_web');
+	 */
+	function change_db($database)
+	{
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		$this->database = $database;
+		if(mysql_select_db($database, $this->connection))
+		{
+			return true;
+		}
+		$this->add_error(mysql_error($this->connection), __FILE__, __LINE__);
+		return false;
+	}
+
+	/**
+	 * This method will start a timer, or calculate the amount of time passed if
+	 * the optional $start is supplied.
+	 *
+	 * @author Scott Roach
+	 * @internal
+	 *
+	 * @param float $start (ex: 1008954123.123547) optional
+	 * @return float (ex: 0.0025)
+	 *
+	 * @example $start_time = $this->timer(); $total_time = $this->timer($start_time);
+	 */
+	function timer($start=null)
+	{
+		if($start === null)
+		{
+			return microtime(true);
+		}
+		else
+		{
+			return (microtime(true) - $start);
+		}
+	}
+
+	/**
+	 * This method adds some statistics to the internal class memory about the queries that were performed
+	 *
+	 * @author Scott Roach
+	 * @internal
+	 *
+	 * @param string $query    (ex: SELECT * FROM table)
+	 * @param float $start     (ex: 1008954123.123547)
+	 * @param float $end       (ex: 1008954123.143512)
+	 * @param boolean $success (ex: true) optional
+	 *
+	 * @example $this->add_query("SELECT * FROM table", 1008954123.123547, 1008954123.143512, false);
+	 */
+	function add_query($query, $start, $end, $success=true)
+	{
+		$execution_time = ($end - $start);
+		$this->statistics['queries'][] = array(
+												'query' => $query,
+												'time'	=> $execution_time,
+												'success' => $success
+											  );
+	}
+
+	/**
+	 * This method actually calls the selected query and adds the stats to the internal memory
+	 *
+	 * @author Scott Roach
+	 * @internal
+	 *
+	 * @param string $query (ex: "SELECT * FROM table")
+	 * @return boolean
+	 *
+	 * @example $this->query("SELECT * FROM table");
+	 */
+	function query($query)
+	{
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		$start = $this->timer();
+		$this->resource = mysql_query($query, $this->connection);
+		$success = true;
+		if(!$this->resource)
+		{
+			$success = false;
+			$this->add_error(mysql_error($this->connection), __FILE__, __LINE__);
+		}
+
+		$this->add_query($query, $start, $this->timer(), $success);
+		return $success;
+
+	}
+
+	/**
+	 * This method will grab all rows and return a multidimensional associative array
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param string $query  (ex: "SELECT * FROM table")
+	 * @param string $method (ex: "assoc", "array", "object", etc...) optional
+	 * @return array
+	 *
+	 * @example $rows = $db->select_all("SELECT * FROM table");
+	 */
+	function select_all($query, $method='assoc')
+	{
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		$this->query($query);
+		$results = array();
+		$method = $this->find_method($method);
+		while($row = $method($this->resource))
+		{
+			$results[] = $row;
+		}
+		return $results;
+	}
+
+	/**
+	 * This method will return the number of rows selected by a query
+	 *
+	 * @author Scott Roach
+	 *
+	 * @return int
+	 *
+	 * @example if($db->num_rows() > 0){ echo "welcome"; }
+	 */
+	function num_rows()
+	{
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		return mysql_num_rows($this->resource);
+	}
+
+	/**
+	 * This method will return the number of rows affected by a query
+	 *
+	 * @return int
+	 *
+	 * @example if($db->affected() > 0) { echo "Something changed!";}
+	 */
+	function affected()
+	{
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		return mysql_affected_rows($this->connection);
+	}
+
+	/**
+	 * This method will return one row of a query
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param string $query  (ex: "SELECT * FROM table")
+	 * @param string $method (ex: "assoc", "array", "object", etc...) optional
+	 * @return array
+	 *
+	 * @example $row = $db->select_row("SELECT * FROM table")
+	 */
+	function select_row($query, $method='assoc')
+	{
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		$this->query($query);
+		$method = $this->find_method($method);
+		return $method($this->resource);
+	}
+
+	/**
+	 * Enter description here...
+	 *
+	 * @param unknown_type $method
+	 * @return unknown
+	 */
+	function getquery($method='assoc') {
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		if(count($this->statistics['queries']) === 0) {
+			$this->add_error('You must perform a query before you try to get records', __FILE__, __LINE__);
+			return false;
+		}
+		$method = $this->find_method($method);
+		return $method($this->resource);
+	}
+
+
+	/**
+	 * This method will select all columns from the table(s) listed in $from. It will return
+	 * all of the rows meeting the conditions of $where and $group as a multidimensional array
+	 * with each of the tables having their own fields as an array.
+	 *
+	 * Here is an example:
+	 *
+	 * $rows = $db->select(
+	 * 				array('si' => 'schoolinformation', 'p' => 'programs'),
+	 * 				array('si.schoolLocation = "Anaheim"', 'si.id = p.school_id'),
+	 * 				null,
+	 * 				array('p.name ASC')
+	 * );
+	 *
+	 * This will return the following array
+	 * $rows = Array(
+	 * 		[0] => Array(
+	 * 			[schoolinformation] => Array(
+	 * 				[id] => 23,
+	 * 				[schoolLocation] => Anaheim
+	 * 				[schoolCity] => Anaheim
+	 * 			),
+	 * 			[programs] => Array(
+	 * 				[id] => 565,
+	 * 				[school_id] => 23,
+	 * 				[name] => Massage Therapy
+	 * 			)
+	 * 		),
+	 * 		[1] => Array(
+	 * 			[schoolinformation] => Array(
+	 * 				[id] => 23,
+	 * 				[schoolLocation] => Anaheim
+	 * 				[schoolCity] => Anaheim
+	 * 			),
+	 * 			[programs] => Array(
+	 * 				[id] => 758,
+	 * 				[school_id] => 23,
+	 * 				[name] => Medical Assisting
+	 * 			)
+	 * 		)
+	 * )
+	 *
+	 * The keys in the $from array are used as aliases in the query which makes it easier to
+	 * access the table columns in your where, group and order. These are OPTIONAL. If you
+	 * omit them they will default the actual table name instead
+	 * (IE the example above schoolinformation.id and programs.id etc)
+	 *
+	 * Each of the options other than $from can be skipped by using NULL values
+	 *
+	 * @param array|string $from
+	 * @param array|string|null $where
+	 * @param array|string|null $group
+	 * @param array|string|null $order
+	 * @return array
+	 */
+	function select($from=array(), $where=array(), $group=array(), $order=array())
+	{
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		// make sure the arguments are arrays so we can work with them easier
+		$from  = !is_array($from) ? array($from) : $from;
+		$where = !is_array($where) ? (is_null($where) ? array() : array($where)) : $where;
+		$order = !is_array($order) ? (is_null($order) ? array() : array($order)) : $order;
+		$group = !is_array($group) ? (is_null($group) ? array() : array($group)) : $group;
+		// Hold the columns in our tables
+		$columns = array();
+		// Just use this to flush out aliases
+		$realfrom = array();
+		// Use this to convert numeric indexes to the table => column indexes
+		$fields = array();
+		// The actual array that we will return
+		$return = array();
+		foreach($from as $alias => $table)
+		{
+			if(is_numeric($alias))
+			{
+				$realfrom[$table] = $table;
+			}
+			else
+			{
+				$realfrom[$alias] = $table;
+			}
+		}
+		$from = $realfrom;
+		unset($realfrom);
+		foreach($from as $alias => $table)
+		{
+			$columns[$alias] = $this->find_valid_columns($table);
+			foreach($columns[$alias] as $column)
+			{
+				$fields['table'][] = $table;
+				$fields['field'][] = $column;
+			}
+		}
+		$query = 'SELECT ';
+		$selects = array();
+		foreach($columns as $table => $columns)
+		{
+			foreach($columns as $column)
+			{
+				$selects[] = $table . '.`' . $column . '`';
+			}
+		}
+		$query .= implode(', ', $selects) . ' FROM ';
+		$froms = array();
+		foreach($from as $alias => $table)
+		{
+			$froms[] = "`$table` AS $alias";
+		}
+		$query .= implode(', ', $froms);
+		if(count($where) > 0)
+		{
+			$query .= ' WHERE ' . implode(' AND ', $where);
+		}
+		if(count($group) > 0)
+		{
+			$query .= ' GROUP BY ' . implode(', ', $group);
+		}
+		if(count($order) > 0)
+		{
+			$query .= ' ORDER BY ' . implode(', ', $order);
+		}
+		$rows = $this->select_all($query, 'row');
+		foreach($rows as $key => $row)
+		{
+			foreach($row as $id => $value)
+			{
+				$return[$key][$fields['table'][$id]][$fields['field'][$id]] = $value;
+			}
+		}
+		return $return;
+	}
+
+	/**
+	 * This method will find the desired query return function
+	 *
+	 * @author Scott Roach
+	 * @internal
+	 *
+	 * @param string $method (ex: "assoc", "array", "object", etc...)
+	 * @return string
+	 *
+	 * @example $this->find_method("assoc")
+	 */
+	function find_method($method)
+	{
+		$method = strtolower($method);
+		switch($method)
+		{
+			case 'array':
+				return 'mysql_fetch_array';
+			break;
+			case 'object':
+				return 'mysql_fetch_object';
+			break;
+			case 'row':
+				return 'mysql_fetch_row';
+			break;
+			case 'field':
+				return 'mysql_fetch_field';
+			break;
+			case 'lengths':
+				return 'mysql_fetch_lengths';
+			break;
+			default:
+				return 'mysql_fetch_assoc';
+			break;
+		}
+	}
+
+	/**
+	 * This method will return the total running time of the class since it was constructed
+	 *
+	 * @author Scott Roach
+	 *
+	 * @return float
+	 *
+	 * @example echo "This script has been running for " . $db->get_running_time() . " seconds";
+	 */
+	function get_running_time()
+	{
+		return $this->timer($this->statistics['start']);
+	}
+
+	/**
+	 * This method will insert $values into the table $table.
+	 * $values MUST be an associative array or a multidimensional associative array.
+	 *
+	 * This method will look at the table and only insert values which the key of the
+	 * array exists as a column in the database.
+	 *
+	 * If a multidimensional array is passed, it create an insert for each array.
+	 *
+	 * <b><u>VIEW THE EXAMPLES!!</u></b>
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param string $table (ex: "table")
+	 * @param array $values (ex: array('column1' => 'value1'))
+	 * @return mixed
+	 *
+	 * @example
+	 * 		Example Table Structure
+	 * 			column1		varchar(255)
+	 * 			column2		varchar(255)
+	 * 			column3		varchar(255)
+	 *
+	 * 		Example of a single insert:
+	 * 			$db->insert('table', array(	'column1' => 'value1',
+	 * 										'column2' => 'value2',
+	 * 										'column3' => 'value3',
+	 * 										'FAKEONE' => 'FAKEST'));
+	 * 			This will insert one row into the table "table"
+	 * 			It will <b>not</b> try to insert FAKEONE because that column does not exist
+	 *
+	 * 		Example of multiple inserts: Note you may want to use insert_bulk for these types of inserts as it will be much faster
+	 * 			$db->insert('table'	array(
+	 * 										array(	'column1' => 'value1',
+	 * 												'column2' => 'value2',
+	 * 												'column3' => 'value3'),
+	 * 										array(	'column1' => 'another value1',
+	 * 												'column2' => 'another value2',
+	 * 												'column3' => 'another value3'),
+	 * 										array(	'column1' => 'yet another value1',
+	 * 												'column2' => 'yet another value2',
+	 * 												'FAKEONE' => 'SOME FAKE VALUE')));
+	 * 			This will insert 3 rows into the table "table"
+	 * 			It will <b>not</b> try to insert the FAKEONE because that column does not exist
+	 *
+	 */
+	function insert($table, $values)
+	{
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		$query = 'INSERT INTO `' . $table . '` ';
+		if(is_array($values))
+		{
+
+			if(is_array(min($values)))
+			{
+				$this->insert_bulk($table, $values);
+				return;
+			}
+			else
+			{
+				$valid_columns = $this->find_valid_columns($table);
+				if(in_array('created', $valid_columns) && !array_key_exists('created', $values))
+				{
+					$values['created'] = date('Y-m-d H:i:s');
+				}
+				if(in_array('modified', $valid_columns) && !array_key_exists('modified', $values))
+				{
+					$values['modified'] = date('Y-m-d H:i:s');
+				}
+				$columns = array_intersect($valid_columns, array_keys($values));
+				$real_values = array();
+				foreach($columns as $column)
+				{
+					$real_values[] = $this->escape($values[$column]);
+				}
+				$query .= '(`' . implode('`,`', $columns) . "`) VALUES('" . implode("', '", $real_values) . "')";
+				return $this->query($query);
+			}
+		}
+		$this->add_error('Insert requires an associative or multidimensional array', __FILE__, __LINE__);
+		return false;
+	}
+
+	/**
+	 * This function will insert multiple rows in one query
+	 * This is more effecient than looping through and inserting each row individually
+	 *
+	 * @param string $table
+	 * @param array $values
+	 * @param int $per_insert
+	 * @return boolean
+	 */
+	function insert_bulk($table, $values, $per_insert=20)
+	{
+		$per_insert = max(1, min(100, $per_insert)); // make sure its between 1-100
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		$query = 'INSERT INTO `' . $table . '` ';
+		if(is_array($values) && is_array(min($values)))
+		{
+			$valid_columns = $this->find_valid_columns($table);
+			$columns = array_intersect($valid_columns, array_keys(min($values)));
+			sort($columns, SORT_STRING);
+			$query .= '(`' . implode('`,`', $columns) . "`) VALUES";
+			$real_values = array();
+			foreach($values as $value)
+			{
+				// get rid of fields that are not in the database
+				foreach($columns as $column)
+				{
+					$insert_value[$column] = $value[$column];
+				}
+				ksort($insert_value, SORT_STRING);
+				$insert_value = $this->escape_all($insert_value);
+				$real_values[] = "('" . implode("', '", $insert_value) . "')";
+			}
+			$real_values = array_chunk($real_values, $per_insert);
+			foreach($real_values as $insert)
+			{
+				//echo $query . implode(",\n", $insert) . "\n\n<br />";
+				if(!$this->query($query . implode(",\n", $insert)))
+				{
+					$this->add_error('There was an error on the bulk Insert', __FILE__, __LINE__);
+					return false;
+				}
+			}
+			return true;
+		}
+		$this->add_error('Insert_bulk requires an associative multidimensional array', __FILE__, __LINE__);
+		return false;
+	}
+	/**
+	 * This method will strip bad characters from text
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param string $data (ex: ''some " \\ Fak\e Da--ta
+	 * @return string      (ex: \'\'some\" \\\\ Fak\\e Da\-\-ta)
+	 *
+	 * @example $db->escape($_POST['field']);
+	 */
+	function escape($data)
+	{
+		return mysql_escape_string($data);
+	}
+
+	/**
+	 * This method will let you pass in a query with the values to be escaped
+	 * as question marks (?). Every other parameter passed will be escaped and
+	 * will replace its order of question mark. See example for more info
+	 *
+	 * If only 2 arguments are passed (query and one other argument) and the
+	 * second argument is an array, it will be used to do the replacing
+	 *
+	 * @author Scott Roach
+	 * @param string $query
+	 * @param string $arguments
+	 *
+	 * @return string
+	 *
+	 * @example echo $this->bind("SELECT * FROM table WHERE field1 = ? AND field2 = ?"), '1', '13'); // SELECT * FROM table WHERE field1 = '1' AND field2 = '13'
+	 */
+	function bind_query()
+	{
+		$args = func_get_args();
+		if(count($args) == 0)
+			return false;
+
+		if(count($args) == 1)
+			return $args[0];
+
+		$query = $args[0];
+		if(count($args) == 2 && is_array($args[1]))
+		{
+			$args = $args[1];
+		}
+		else
+		{
+			$query = $args[0];
+			unset($args[0]);
+		}
+		foreach($args as $arg)
+		{
+			$query = preg_replace('/\?/', $this->escape($arg), $query, 1);
+		}
+		return $query;
+	}
+
+	/**
+	 * This method will query the table $table and find the valid column names
+	 *
+	 * @author Scott Roach
+	 * @internal
+	 *
+	 * @param string $table (ex: table)
+	 * @return array
+	 *
+	 * @example $this->find_valid_colums("table");
+	 */
+	function find_valid_columns($table)
+	{
+		if(is_array($this->tables) && array_key_exists($table, $this->tables))
+		{
+			return $this->tables[$table];
+		}
+		$valid = $this->select_all('EXPLAIN ' . $table);
+		$columns = array();
+		foreach($valid as $key => $value)
+		{
+			$columns[] = $value['Field'];
+		}
+		$this->tables[$table] = $columns;
+		return $columns;
+	}
+
+	/**
+	 * This method will query the currently selected database or supplied database and return all of the available tables
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param string $db (ex: database)
+	 * @return array
+	 *
+	 * @example $this->find_valid_tables(); or $this->find_valid_tables('database');
+	 */
+	function find_valid_tables($db=null)
+	{
+		$valid = $this->select_all('SHOW TABLES' . ($db !== null ? ' FROM `' . $this->escape($db) . '`' : ''), 'row');
+		$return = array();
+		foreach($valid as $table)
+		{
+			$return[] = $table[0];
+		}
+		return $return;
+	}
+
+
+	/**
+	 * This method will check a table ($table) to see if a row exists that meet some criteria ($where)
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param string $table (ex: table)
+	 * @param mixed $where  (ex: `field1` = 'value1' AND `field2` = 'value2', array('field1' => 'value1', field2' => 'value2'))
+	 * @return boolean
+	 *
+	 * @example if($db->exists('table', array('field1' => 'value1', field2' => 'value2')){ echo 'welcome'; }
+	 */
+	function exists($table, $where)
+	{
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		if(is_array($where))
+		{
+			$columns = array_intersect($this->find_valid_columns($table), array_keys($where));
+			$where_values = array();
+			foreach($columns as $column)
+			{
+				$where_values[] = "`$column` = '" . $this->escape($where[$column]) . "'";
+			}
+			$where = implode(' AND ', $where_values);
+		}
+		$query = "SELECT COUNT(*) as total FROM " . mysql_escape_string($table) . " WHERE " . $where;
+		$count = $this->select_row($query);
+		if($count['total'] > 0)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * This method will update the table $table with the values of $values that meet the criteria of $where
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param string $table (ex: table)
+	 * @param array $values (see $this->insert() for $values reference)
+	 * @param mixed $where	(see $this->exists() for $where reference)
+	 * @return boolean
+	 *
+	 * @example $this->update('table', array('column' => 'newvalue'), array('anothercolumn' => 'value'));
+	 */
+	function update($table, $values, $where)
+	{
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		$query = "UPDATE `$table` ";
+		$valid_columns = $this->find_valid_columns($table);
+		if(in_array('modified', $valid_columns) && !array_key_exists('modified', $values))
+		{
+			$values['modified'] = date('Y-m-d H:i:s');
+		}
+		$columns = array_intersect($valid_columns, array_keys($values));
+		$real_values = array();
+		foreach($columns as $column)
+		{
+			$real_values[] = "`$column` = '" . $this->escape($values[$column]) . "'";
+		}
+		$query .= "SET " . implode(', ', $real_values);
+		if(is_array($where))
+		{
+			$columns = array_intersect($valid_columns, array_keys($where));
+			$where_values = array();
+			foreach($columns as $column)
+			{
+				$where_values[] = "`$column` = '" . $this->escape($where[$column]) . "'";
+			}
+			$where = implode(' AND ', $where_values);
+		}
+		$query .= " WHERE $where";
+		//echo $query . ";\n";
+		return $this->query($query);
+	}
+
+	/**
+	 * This method will delete a row from the database. It will only try to use columns to match that exist.
+	 * If you supply no valid colums it will return false. $where can be an array of key value pairs, or just a string
+	 *
+	 * @param string $table
+	 * @param mixed $where
+	 * @return boolean
+	 */
+	function delete($table, $where)
+	{
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		$query = "DELETE FROM `$table` ";
+		$valid_columns = $this->find_valid_columns($table);
+		if(is_array($where))
+		{
+			$columns = array_intersect($valid_columns, array_keys($where));
+			$where_values = array();
+			foreach($columns as $column)
+			{
+				$where_values[] = "`$column` = '" . $this->escape($where[$column]) . "'";
+			}
+			if(sizeof($where_values) == 0)
+			{
+				return false;
+			}
+			$where = implode(' AND ', $where_values);
+		}
+		$query .= " WHERE $where";
+		return $this->query($query);
+	}
+
+	/**
+	 * This method will check to see if it can update $table with the values of $values
+	 * that meet the criteria of $where, If it <u>can't</u> then it will insert
+	 * the values $values into the table $table
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param string $table (ex: table)
+	 * @param array $values (see $this->insert() for $values reference)
+	 * @param mixed $where	(see $this->exists() for $where reference)
+	 * @return boolean
+	 *
+	 * @example $this->update('table', array('column' => 'newvalue'), array('anothercolumn' => 'value'));
+	 */
+	function upsert($table, $values, $where)
+	{
+		if(!$this->connection)
+		{
+			$this->add_error('Not connected to MySQL', __FILE__, __LINE__);
+			return false;
+		}
+		if($this->exists($table, $where))
+		{
+			return $this->update($table, $values, $where);
+		}
+		else
+		{
+			return $this->insert($table, $values);
+		}
+	}
+
+	/**
+	 * This method will build a where statement and escape all bad characters
+	 * If $join is set to true it will join each array value with $joiner which defaults to AND
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param array $where   (ex: array('column' => 'value'))
+	 * @param boolean $join  (ex: true) optional
+	 * @param string $joiner (ex: AND, OR) optional
+	 * @return string
+	 *
+	 * @example $db->build_where(array('column1' => 'value1', 'column2' => 'val"ue2'));
+	 * 			// returns `column1` = 'value1' AND `column2` = 'val\"ue2'
+	 */
+	function build_where($where, $join=true, $joiner='AND')
+	{
+		if(is_array($where))
+		{
+			$where_values = array();
+			foreach($where as $column => $value)
+			{
+				$where_values[$column] = "`" . $this->escape($column) . "` = '" . $this->escape($value) . "'";
+			}
+			if($join)
+			{
+				return implode(' ' . $joiner . ' ', $where_values);
+			}
+			return $where_values;
+		}
+	}
+
+	/**
+	 * This method will apply the function $function to every item of $value
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param mixed $value     (ex: wee, aray('wee'), array(array('wee')), etc...)
+	 * @param string $function (ex: strip_tags, htmlentities, htmlspecialchars, etc...)
+	 * @return mixed
+	 *
+	 * @example $_POST = $db->iterate($_POST, 'strip_tags');
+	 */
+	function iterate($value, $function)
+	{
+		$method = __FUNCTION__;
+		if(!function_exists($function))
+		{
+			return false;
+		}
+		if(is_array($value))
+		{
+			foreach($value as $id => $item)
+			{
+				if(is_array($item))
+				{
+					$value[$id] = $this->$method($item, $function);
+				}
+				else
+				{
+					$value[$id] = $function($item);
+				}
+			}
+		}
+		else
+		{
+			$value = $function($value);
+		}
+		return $value;
+	}
+
+	/**
+	 * This method will apply $this->iterate() with the function as strip_tags
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param mixed $value (ex: wee, aray('wee'), array(array('wee')), etc...)
+	 * @return mixed
+	 *
+	 * @example $_POST = $db->strip_tags($_POST);
+	 */
+	function strip_tags($value)
+	{
+		return $this->iterate($value, 'strip_tags');
+	}
+
+	/**
+	 * This method will apply $this->iterate() with the function as htmlentities
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param mixed $value (ex: wee, aray('wee'), array(array('wee')), etc...)
+	 * @return mixed
+	 *
+	 * @example $_POST = $db->htmlentities($_POST);
+	 */
+	function htmlentities($value)
+	{
+		return $this->iterate($value, 'htmlentities');
+	}
+
+	/**
+	 * This method will apply $this->iterate() with the function as mysql_escape_string
+	 *
+	 * @author Scott Roach
+	 *
+	 * @param mixed $value (ex: wee, aray('wee'), array(array('wee')), etc...)
+	 * @return mixed
+	 *
+	 * @example $_POST = $db->escape_all($_POST);
+	 */
+	function escape_all($value)
+	{
+		return $this->iterate($value, 'mysql_escape_string');
+	}
+
+	/**
+	 * This method returns the id of the last inserted row
+	 *
+	 * @author Scott Roach
+	 *
+	 * @return mixed id
+	 *
+	 * @example $db->insert(); echo $db->last_id();
+	 */
+	function last_id()
+	{
+		return mysql_insert_id($this->connection);
+	}
+
+	/**
+	 * This method will let you assign a key => value pair with two elements from an array.
+	 * It is useful for dropdown selects. Here is an example.
+	 * $array = array('name' => 'Scott', 'id' => 9568);
+	 * $newarray = $db->flip_array_values($array, 'id', 'name');
+	 * $newarray is now array(9568 => 'Scott');
+	 *
+	 * @param array $array
+	 * @param string $the_key
+	 * @param string $the_value
+	 * @return array
+	 */
+	function flip_array_values($array, $the_key, $the_value)
+	{
+		$return = array();
+		foreach($array as $key => $value)
+		{
+			if(!array_key_exists($the_key, $value) || !array_key_exists($the_value, $value))
+			{
+				return false;
+			}
+			$return[$value[$the_key]] = $value[$the_value];
+		}
+		return $return;
+	}
+
+	function chain_select($what=null)
+	{
+		if($what == '*')
+		{
+			$what = null;
+			$this->chain['settings']['selectall'] = true;
+		}
+		if(is_null($what))
+		{
+			$this->chain['select'] = array();
+			$this->chain['settings']['selectall'] = true;
+		}
+		else
+		{
+			if(!is_array($what))
+			{
+				$fields = explode(',', $what);
+				foreach($fields as $field)
+				{
+					$this->chain['select'][] = trim($field);
+				}
+			}
+			else
+			{
+				$this->chain['select'] = $what;
+			}
+		}
+		return $this;
+	}
+
+	function chain_from($from)
+	{
+		if(!is_array($from))
+		{
+			$tables = explode(',', $from);
+			foreach($tables as $table)
+			{
+				$this->chain['from'][] = trim($from);
+			}
+		}
+		else
+		{
+			foreach($from as $alias => $table)
+			{
+				if(!is_numeric($alias))
+				{
+					$this->chain['from'][$alias] = $table;
+				}
+				else
+				{
+					$this->chain['from'][] = $table;
+				}
+			}
+		}
+		if($this->chain['settings']['selectall'])
+		{
+			foreach($this->chain['from'] as $alias => $table)
+			{
+				$columns = $this->find_valid_columns($table);
+				$alias = is_numeric($alias) ? '' : $alias . '.';
+				foreach($columns as $column)
+				{
+					$this->chain['select'][] = $alias . $column;
+				}
+			}
+		}
+		return $this;
+	}
+
+	function chain_join($table, $on)
+	{
+		$this->join($table, $on);
+		return $this;
+	}
+
+	function chain_leftjoin($table, $on)
+	{
+		$this->join($table, $on, 'LEFT JOIN');
+		return $this;
+	}
+
+	function join($table, $on, $type=null)
+	{
+		$alias = null;
+		if(is_array($table))
+		{
+			$alias = key($table);
+			$table = current($table);
+		}
+		$this->chain['join'][] = array('table' => $table, 'alias' => $alias, 'on' => $on, 'type' => is_null($type) ? 'JOIN' : $type);
+		if($this->chain['settings']['selectall'])
+		{
+			$columns = $this->find_valid_columns($table);
+			$alias = is_null($alias) ? '' : $alias . '.';
+			foreach($columns as $column)
+			{
+				$this->chain['select'][] = $alias . $column;
+			}
+		}
+	}
+
+	function chain_where($where)
+	{
+		if(!is_array($where))
+		{
+			$this->chain['where'][] = $where;
+		}
+		else
+		{
+			foreach($where as $field => $compare)
+			{
+				if(!is_numeric($field))
+				{
+					$this->chain['where'][$field] = '"' . $this->escape($compare) . '"';
+				}
+				else
+				{
+					$this->chain['where'][] = '"' . $this->escape($compare) . '"';
+				}
+			}
+		}
+		return $this;
+	}
+
+	function chain_like($field, $compare=null)
+	{
+		if(is_array($field))
+		{
+			foreach($field as $column => $compare)
+			{
+				$this->chain['where'][$column . ' LIKE'] = '"' .(strpos($compare, '%') !== false ? $this->escape($compare) : '"%' . $this->escape($compare) . '%') . '"';
+			}
+		}
+		elseif(!is_null($compare))
+		{
+			$this->chain['where'][$field . ' LIKE '] = '"' . (strpos($compare, '%') !== false ? $this->escape($compare) : '%' . $this->escape($compare) . '%') . '"';
+		}
+		return $this;
+	}
+
+	function chain_in($field, $in)
+	{
+		$alias = null;
+		if(is_array($field))
+		{
+			$alias = key($field) . '.';
+			$field = current($field);
+		}
+
+		$ins = array();
+		foreach($in as $compare)
+		{
+			$ins[] = $this->escape($compare);
+		}
+
+		$this->chain['where'][$alias . $field . ' IN'] = '("' . implode('", "', $ins) . '")';
+		return $this;
+	}
+	function chain_group($group)
+	{
+		if(!is_array($group))
+		{
+			$groups = explode(',', $group);
+			foreach($groups as $group)
+			{
+				$this->chain['group'][] = trim($group);
+			}
+		}
+		else
+		{
+			foreach($group as $alias => $field)
+			{
+				if(!is_numeric($alias))
+				{
+					$this->chain['group'][] = $alias . '.' . $field;
+				}
+				else
+				{
+					$this->chain['group'][] = $field;
+				}
+			}
+		}
+		return $this;
+	}
+
+	function chain_order($order, $direction=null)
+	{
+		if(!is_array($order))
+		{
+			$orders = explode(',', $order);
+			foreach($orders as $order)
+			{
+				$order = trim($order);
+				if(!is_null($direction))
+				{
+					$this->chain['order'][$order] = $direction;
+				}
+				elseif(preg_match('/\b(desc|asc)/i', $order))
+				{
+						$this->chain['order'][trim(preg_replace('/(\b(desc|asc))/i', '', $order))] = (preg_match('/\bdesc/i', $order) ? 'DESC' : 'ASC');
+				}
+				else
+				{
+					$this->chain['order'][trim($order)] = 'ASC';
+				}
+			}
+		}
+		else
+		{
+			foreach($order as $field => $orderby)
+			{
+				if(!is_numeric($field))
+				{
+					$this->chain['order'][$field] = $orderby;
+				}
+				elseif(preg_match('/\b(desc|asc)/i', $orderby))
+				{
+					$this->chain['order'][trim(preg_replace('/\b(desc|asc)/i', '', $orderby))] = (preg_match('/\bdesc/i', $orderby) ? 'DESC' : 'ASC');
+				}
+				else
+				{
+					$this->chain['order'][trim($orderby)] = 'ASC';
+				}
+			}
+		}
+		return $this;
+	}
+
+	function chain_limit($limit, $offset=null)
+	{
+		$this->chain['limit'] = $limit . ($offset == null ? '' : ', ' . $offset);
+		return $this;
+	}
+
+	function chain_get()
+	{
+		$query = 'SELECT ' . implode(', ', $this->chain['select']) . "\n";
+		$froms = array();
+		foreach($this->chain['from'] as $alias => $table)
+		{
+			$real_alias = '';
+			if(!is_numeric($alias))
+			{
+				$real_alias = ' ' . $alias;
+			}
+			$froms[] = $table . $real_alias;
+		}
+		$query .= ' FROM ' . implode(', ', $froms) . "\n";
+		if(isset($this->chain['join']) && count($this->chain['join']) > 0)
+		{
+			$joins = array();
+			foreach($this->chain['join'] as $join)
+			{
+				$joins[] = $join['type'] . ' ' . $join['table'] . (is_null($join['alias']) ? '' : ' ' . $join['alias']) . ' ON ' . $join['on'] . "\n";
+			}
+			$query .= implode('', $joins);
+		}
+		if(isset($this->chain['where']) && count($this->chain['where']) > 0)
+		{
+			$wheres = array();
+			foreach($this->chain['where'] as $first => $compare)
+			{
+				if(preg_match('/[\=\>\<\! ]/', $first))
+				{
+					$wheres[] = $first . ' ' . $compare;
+				}
+				else
+				{
+					$wheres[] = $first . ' = ' . $compare;
+				}
+			}
+			$query .= ' WHERE ' . implode(' AND ', $wheres) . "\n";
+		}
+		if(isset($this->chain['group']) && count($this->chain['group']) > 0)
+		{
+			$query .= ' GROUP BY '. implode(', ', $this->chain['group']) . "\n";
+		}
+		if(isset($this->chain['order']) && count($this->chain['order']) > 0)
+		{
+			$orders = array();
+			foreach($this->chain['order'] as $order => $direction)
+			{
+				$orders[] = $order . ' ' . $direction;
+			}
+			$query .= ' ORDER BY ' . implode(', ', $orders) . "\n";
+		}
+		if(isset($this->chain['limit']) && !empty($this->chain['limit']))
+		{
+			$query .= ' LIMIT ' . $this->chain['limit'];
+		}
+		return $query;
+	}
+
+	/**
+	 * This is a shortcut method for using select_all and flip_array values.
+	 * It will return a key value pair of the first two items int he query.
+	 * <pre><code>Example:
+	 * $states = $db->select_key_values("SELECT state_code, state_name FROM states ORDER BY state_name");
+	 * // Values of state_code will become the Key and values of state_name will become the value
+	 * Array (
+	 *       [AL] => 'Alabama',
+	 *       [AK] => 'Alaska',
+	 *       [AB] => 'Alberta',
+	 * );
+	 * Etc...
+	 * </code></pre>
+	 *
+	 * @param string $query
+	 * @return array
+	 */
+	function select_key_values($query) {
+		$values = $this->select_all($query);
+		$return = array();
+		if($values && count($values) > 0) {
+			$keys = array_keys($values[0]);
+			foreach($values as $value) {
+				if(count($keys) == 1) {
+					$return[] = $value[$keys[0]];
+				} else {
+					$return[$value[$keys[0]]] = $value[$keys[1]];
+				}
+			}
+		}
+		return $return;
+	}
+
+	/**
+	 * This is just a shortcut method for simple queries
+	 *
+	 * @param string $table
+	 * @param array|string|null $where
+	 * @param array|string|null $order
+	 * @param array|string|null $limit
+	 * @return array
+	 */
+	function get($table, $where=null, $order=array(), $limit=array()) {
+		$qwhere = $qorder = $qlimit = '';
+		if(!is_null($where)) {
+			if(is_array($where) && count($where) > 0) {
+				$qwhere = " WHERE " . $this->build_where($where);
+			}
+			if(!is_array($where) && trim($where) !== '') {
+				$qwhere = " WHERE " . preg_replace('/\s?WHERE\s?/i', '', $where);
+			}
+		}
+		if(!is_null($order)) {
+			if(is_array($order) && count($order) > 0) {
+				$qorder = " ORDER BY " . implode(', ', $order);
+			}
+			if(!is_array($order) && trim($order) !== '') {
+				$qorder = " ORDER BY " . preg_replace('/\s?ORDER BY\s?/i', '', $order);
+			}
+		}
+		if(!is_null($limit)) {
+			if(is_array($limit) && count($limit) > 0) {
+				$qlimit = " LIMIT " . implode(', ', $limit);
+			}
+			if(!is_array($limit) && trim($limit) !== '') {
+				$qlimit = " LIMIT " . preg_replace('/\s?LIMIT\s?/i', '', $limit);
+			}
+		}
+
+		$query = "SELECT * FROM `$table` $qwhere $qorder $qlimit";
+		return $this->select_all($query);
+	}
+
+	function get_connection() {
+		return $this->connection;
+	}
+}
+function create_db($conn = null) {
+	return new db('localhost', 'drew', '', 'apache');
+}

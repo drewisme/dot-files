@@ -1,0 +1,6 @@
+$(function(){
+    $('body').on('click', function(e){
+        e.preventDefault();
+        $('.video-iframe').attr('src', 'http://www.youtube.com/embed/' + $(this).data('youtube-id') + '?rel=0&iv_load_policy=3&modestbranding=1&hd=1&autoplay=1');
+    });
+});

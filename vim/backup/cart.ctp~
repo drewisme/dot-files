@@ -1,0 +1,138 @@
+<?php 
+$cart_type = in_array($this->request->params['action'], array('wishlist', 'public_wishlist')) ? 'wishlist' : 'cart';
+$is_public = $this->request->params['action'] == 'public_wishlist';
+?>
+<section class="background-black shopping-cart-section hero-top">
+	<div class="container">
+		<div class="row">
+			<?php echo $this->TwitterBootstrap->create('Cart'); ?>
+			<div class="span10 shopping-cart-container">
+				<?php if(count($carts) > 0 && !$is_public) { ?>
+				<?php echo $this->TwitterBootstrap->button('Update Quantity', array('class' => 'pull-right btn-mini', 'id' => 'cart-update-quantity', 'name' => 'update-quantity', 'value' => 1)); ?>
+				<?php } ?>
+				<h2><span>
+					<?php echo h($cart_title)?>
+				</span></h2>
+				<hr class="shopping-cart-hr">
+				<?php
+				if(count($carts) > 0) {
+				$running_price = $running_tax = 0.0;
+				foreach($carts as $key => $cart) {
+					$running_price += ($this->Sidecart->price($cart['Product'], false) * $cart['Cart']['quantity']);
+					$running_tax += (true || $cart['Cart']['taxable'] ? $this->Sidecart->price($cart['Product'], false) * $cart['Cart']['quantity'] * 0.0775 : 0);
+					?>
+				<div class="row shopping-cart-item">
+					<div class="span10 undo-remove" style="display: none;">
+						<h2>Product Removed</h2>
+						<p><?php echo $this->Html->link('Add this product back', array('controller' => 'carts', 'action' => 'add_' . ($cart_type == 'wishlist' ? 'wishlist' : 'cart'), $cart['Cart']['product_id'], $cart['Cart']['quantity'])); ?></p>
+					</div>
+					<?php echo $this->TwitterBootstrap->hidden("Cart.$key.id", array('value' => $cart['Cart']['id']));?>
+					<?php echo $this->TwitterBootstrap->hidden("Cart.$key.product_id", array('value' => $cart['Cart']['product_id'], 'class' => 'product_id'));?>
+					<div class="span3 shopping-cart-item-image">
+						<a href="<?=$this->Sidecart->productUrl($cart['Product'])?>">
+							<?php 
+							echo $this->Media->embed($this->Media->file("m/{$cart['Product']['Attachment'][0]['path']}"), array(
+								'restrict' => array('image'), 
+								'width' => 270,
+								'class' => 'product-image',
+							));
+							echo $this->Sidecart->priceFormat($cart['Product'], '
+								<img src="/theme/HPI/img/sale-triangle.png" class="sale-triangle :sale_status" />
+							'); 
+							?>
+						</a>
+					</div>
+					<div class="span4 shopping-cart-item-description">
+						<?php echo $this->Sidecart->priceFormat($cart['Product'], '
+							<p class="item-price :sale_status">:price</p>
+							<p class="regular-price :sale_status">:original_price</p>
+						');?>
+						<p class="shopping-cart-item-name"><?=$cart['Product']['name']?></p>
+						<p class="shopping-cart-item-options">Black</p>
+					</div>
+					<div class="span1 shopping-cart-quantity">
+						<?php echo $this->TwitterBootstrap->input("Cart.$key.quantity", array(
+							'value' => $cart['Cart']['quantity'], 
+							'class' => 'input-mini product_quantity', 
+							'min' => 0
+						)); ?>
+					</div>
+					<div class="span2 shopping-cart-controls">
+						<ul class="unstyled">
+							<li>&nbsp;</li>
+							<?php
+							switch($cart_type) {
+								case 'wishlist':
+									echo '<li>' . $this->Html->link('Move to Cart', array('action' => 'wishlist_to_cart', $cart['Cart']['product_id'])) . '</li>';
+									echo $is_public ? '' : '<li>' . $this->Html->link('Remove', array('action' => 'remove_wishlist', $cart['Cart']['product_id']), array('class' => 'remove-cart-item')) . '</li>';
+								break;
+								default: 
+									echo '<li>' . $this->Html->link('Move to Wishlist', array('action' => 'cart_to_wishlist', $cart['Cart']['product_id'])) . '</li>';
+									echo '<li>' . $this->Html->link('Remove', array('action' => 'remove', $cart['Cart']['product_id']), array('class' => 'remove-cart-item')) . '</li>';
+								break;
+							}
+							?>
+						</ul>
+					</div>
+				</div>
+				<hr />
+					<?php
+					} 
+					if($this->request->params['action'] == 'index') { ?>
+				<div class="row">
+					<div class="span3 input-append">
+						<p class="promo-code">Enter Promotion Code</p>
+							<input type="text">
+							<button class="btn" type="button">Apply</button>
+					</div>
+					<div class="span3 offset4 order-total">
+						<table>
+							<tbody><tr>
+								<td>Subtotal:</td>
+								<td><?php echo $this->Sidecart->currency($running_price)?></td>
+							</tr>
+							<tr>
+								<td>Shipping:</td>
+								<td><?php echo $this->Sidecart->currency(0)?></td>
+							</tr>
+							<tr>
+								<td>Sales Tax:</td>
+								<td><?php echo $this->Sidecart->currency($running_tax)?></td>
+							</tr>
+							<tr>
+								<td><strong>Order Total:</strong></td>
+								<td><strong><?php echo $this->Sidecart->currency($running_price + $running_tax)?></strong></td>
+							</tr>
+						</tbody></table>
+					</div>
+					<hr class="span10">
+					<div class="span2 offset8 buy-box">
+						<?php echo $this->TwitterBootstrap->submit('Check Out', array('class' => 'btn-buynow', 'name' => 'checkout'));?>
+					</div>		
+				</div>
+				<?php }
+				} else {
+					?>
+					<div class="row shopping-cart-item"><h2 class="empty-cart"><?php echo 'Your ' . ($this->request->params['action'] == 'wishlist' ? 'Wishlist' : 'Cart') . ' is Empty'; ?></h2></div>
+					<?php
+				}
+				?>
+			</div>
+			<div class="span2">
+				<div class="shopping-cart-help-box">
+					<strong>Need Help</strong>
+					<p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Maecenas faucibus mollis interdum. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Cras mattis consectetur purus sit amet fermentum.</p>
+					<a href="#">Learn More</a>
+				</div>
+				<div class="shopping-cart-help-box">
+					<strong>Need Help</strong>
+					<p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Maecenas faucibus mollis interdum. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Cras mattis consectetur purus sit amet fermentum.</p>
+					<a href="#">Learn More</a>
+				</div>
+			</div>
+			
+			<?php echo $this->TwitterBootstrap->end(); ?>
+		</div>
+	</div>
+</section>
+<?php echo $this->element('recently_viewed'); ?>

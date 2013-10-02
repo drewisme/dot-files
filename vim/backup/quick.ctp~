@@ -1,0 +1,99 @@
+<div class="container quickcart-fancybox">
+	<div class="row">
+		<div class="span4 products-list hidden-phone">
+			<div class="image-holder">
+				<?php
+				echo $this->Media->embed($this->Media->file("l/{$product['Attachment'][0]['path']}"), array(
+					'restrict' => array('image'), 
+					'width' => 670,
+					'class' => 'product-image',
+				));
+				echo $this->Sidecart->priceFormat($product['Product'], '
+					<img src="/theme/HPI/img/sale-triangle.png" class="sale-triangle :sale_status" />
+				'); 
+				?>
+			</div>
+		</div>
+		<div class="span8">
+			<div class="row">
+				<div class="span8 heading">
+					<div class="title pull-left">
+						<span>Added to Cart</span>
+						<div class="slash"></div>
+					</div>
+					<div class="border-holder" style="margin-left: 112px; ">
+						<div class="border"></div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="span8 product-quick-overview">
+					<p class="product-description-excerpt">
+						<strong class="product-name"><?=$product['Product']['name']?></strong>
+						<?php echo $this->Text->truncate($product['Product']['description'], 250); ?>
+					</p>
+					<?php 
+					echo $this->Sidecart->priceFormat($product['Product'], '
+						<p class="regular-price :sale_status">:original_price</p>
+						<p class="item-price">:price</p>
+					');
+					?>
+				</div>
+			</div>
+			<div class="row">
+				<div class="span8">
+					<?php echo $this->Html->link('Checkout', array('controller' => 'carts', 'action' => 'checkout'), array('class' => 'btn-buynow'))?>
+					<?php echo $this->Html->link('Keep Shopping', '/', array('class' => 'btn-grey close-fancybox hidden-phone'))?>
+				</div>
+			</div>
+			<div class="row visible-phone">
+				<div class="span8">
+					<hr class="clearfix">
+					<?php echo $this->Html->link('Keep Shopping', '/', array('class' => 'btn-grey close-fancybox'))?>
+				</div>
+			</div>
+		</div>
+	</div>
+	<hr class="clearfix">
+	<div class="row clearfix">
+		<div class="span12 heading">
+			<div class="title pull-left">
+				<span class="subtitle">You Might</span>
+				<span>Also Like</span>
+				<div class="slash"></div>
+			</div>
+			<div class="border-holder" style="margin-left: 112px; ">
+				<div class="border"></div>
+			</div>
+		</div>
+	</div>
+	<ul class="row products-list">
+		<?php foreach($upsells as $upsell): ?>
+		<li class="span3">
+			<div class="image-holder">
+				<a href="<?=$this->Sidecart->productUrl($upsell['Product'])?>">
+					<?php echo $this->Html->image($this->Media->url("m/{$upsell['Attachment'][0]['path']}")); ?>
+					<?php echo $this->Sidecart->priceFormat($upsell['Product'], '
+						<img src="/theme/HPI/img/sale-triangle.png" class="sale-triangle :sale_status">
+					'); ?>
+				</a>
+				<a href="<?php echo $this->Sidecart->productUrl($upsell['Product'], true, array('action' => 'quick'))?>" class="quickview">QUICK VIEW</a>
+			</div>
+			<?php 
+			echo $this->Sidecart->priceFormat($upsell['Product'], '
+			<a href=":product_url">
+				<strong>:name</strong>
+				<span class="price">:price</span>
+			</a>
+			'); 
+			?>
+		</li>
+		<?php endforeach; ?>
+	</ul>
+</div>
+<script type="text/javascript">
+	<!--
+	// Update the cart count
+	$('.cart-count').text('<?php echo $this->Session->read('Cart.count'); ?>');
+	-->
+</script>

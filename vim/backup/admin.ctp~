@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title><?php echo Configure::read('Setting.Company.name') ?> Admin - <?php echo $title_for_layout ?></title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<?php echo $this->fetch('meta'); ?>
+		<?php echo $this->Html->css(array('bootstrap', 'bootstrap-responsive', 'redactor', 'admin', 'jquery-ui/jquery-ui-1.8.16.custom')); ?>
+		<?php echo $this->fetch('css'); ?>
+		<?php echo $this->fetch('auto_asset_css'); ?>
+
+		<!--[if lt IE 9]>
+			<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+
+		<!-- <link rel="shortcut icon" href=""> -->
+	</head>
+
+	<body>
+
+		<div class="navbar navbar-inverse navbar-fixed-top">
+			<div class="navbar-inner">
+				<div class="container-fluid">
+					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</a>
+					<?php echo $this->Html->link(Configure::read('Setting.Company.name'), array('admin' => true, 'controller' => 'dashboard'), array('class' => 'brand')) ?>
+					<div class="nav-collapse collapse">
+						<ul class="nav pull-left">
+							<li class="dropdown">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown"> Sales <b class="caret"></b> </a>
+								<ul class="dropdown-menu">
+									<li><a href="#">Orders</a></li>
+									<li><a href="#">Invoices</a></li>
+								</ul>
+							</li>
+							<li class="dropdown <?php echo in_array($this->request->controller, array('products', 'categories')) ? 'active' : '' ?>">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown"> Products <b class="caret"></b> </a>
+								<ul class="dropdown-menu">
+									<li><?php echo $this->Html->link('Manage Products', array('admin' => true, 'controller' => 'products', 'action' => 'index')) ?></li>
+									<li><?php echo $this->Html->link('Manage Categories', array('admin' => true, 'controller' => 'categories', 'action' => 'index')) ?></li>
+									<li><?php echo $this->Html->link('Manage Product Features', array('admin' => true, 'controller' => 'product_features', 'action' => 'index')) ?></li>
+								</ul>
+							</li>
+							<li class="divider-vertical"></li>
+							<li class="dropdown">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown"> CMS <b class="caret"></b> </a>
+								<ul class="dropdown-menu">
+									<li><?php echo $this->Html->link('Homepage', array('admin' => true, 'controller' => 'pages', 'action' => 'edit', 1)) ?></li>
+									<li><?php echo $this->Html->link('Community', array('admin' => true, 'controller' => 'cms_posts', 'action' => 'index')) ?></li>
+									<li><?php echo $this->Html->link('Manage Mantles', array('admin' => true, 'controller' => 'mantles', 'action' => 'index')) ?></li>
+								</ul>
+							</li>
+						</ul>
+						<ul class="nav pull-right">
+							<li>
+								<a href="/">Visit Site</a>
+							</li>
+							<li class="dropdown pull-right">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown"> Hello, Admin <b class="caret"></b> </a>
+								<ul class="dropdown-menu">
+									<li><a href="#">My Settings</a></li>
+									<li><a href="#">Log Out</a></li>
+								</ul>
+							</li>
+						</ul>
+					</div><!--/.nav-collapse -->
+				</div>
+			</div>
+		</div>
+
+		<div class="container-fluid">
+
+			<div class="row-fluid">
+
+				<?php echo !empty($sidebar_links) ? $this->element('admin/sidebar') : ''; ?>
+
+				<div <?php echo !empty($sidebar_links) ? 'class="span10"' : 'class="span12"' ?>>
+					<?php echo $this->TwitterBootstrap->flashes(array("auth" => true)); ?>
+					<?php echo $this->fetch('content'); ?>
+				</div>
+
+			</div>
+
+		</div> <!-- /container -->
+
+		<footer class="footer">
+			
+		</footer>
+
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script>window.jQuery || document.write('<script src="/js/libs/jquery-1.7.1.min.js"><\/script>')</script>
+
+		<script type="text/javascript">
+			var admin_controller = '<?php echo $this->request['controller'] ?>'
+			var admin_action = '<?php echo $this->request['action'] ?>'
+		</script>
+
+		<?php echo $this->fetch('script'); ?>
+		
+		<?php echo $this->Html->script(array('bootstrap', 'redactor.min', 'jquery.admin', 'underscore-min', 'jquery-ui-timepicker-addon')); ?>
+		
+		<?php //echo $this->element('sql_dump'); ?>
+
+	</body>
+</html>

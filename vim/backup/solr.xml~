@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<solr persistent="true">
+  <cores defaultCoreName="collection1" adminPath="/admin/cores" zkClientTimeout="${zkClientTimeout:15000}" hostPort="8983" hostContext="solr">
+    <core instanceDir="collection1/" name="collection1"/>
+    <core schema="conf/schema.xml" instanceDir="billabong/" name="billabong" config="conf/solrconfig.xml" dataDir="data/"/>
+    <core schema="conf/schema.xml" instanceDir="hpi/" name="hpi" config="solrconfig.xml" dataDir="data/"/>
+  </cores>
+</solr>

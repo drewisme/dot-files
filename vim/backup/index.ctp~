@@ -1,0 +1,212 @@
+<?php 
+$this->Crumb->addCrumb('Home', '/');
+$this->Crumb->addCrumb('Community', array('controller' => 'cms_categories', 'action' => 'index'));
+?>
+<section class="background-black background-black-1">
+	<div class="container">
+		<h1 class="row heading">
+			<div class="span12">
+				<div class="title pull-left">
+					<span>COMMUNITY</span>
+					<div class="slash"></div>
+				</div>
+				<div class="border-holder" style="margin-left: 228px;">
+					<div class="border"></div>
+				</div>
+			</div>
+		</h1>
+
+		<div class="row social-holder">
+			<ul class="unstyled pull-right social-list addthis_toolbox">
+                                <li><a href="<?php echo Configure::read('Setting.Company.Social.twitter.url'); ?>" class="addthis_button_twitteri <?php echo Configure::read('Setting.Company.Social.twitter.show') ? '' : 'hidden'; ?>"><img src="/theme/<?php echo $this->theme; ?>/img/icon-twitter-16.png" width="16" height="16" alt="Twitter"> Twitter</a></li>
+				<li><a href="#" class="addthis_button_facebook"><img src="/theme/<?php echo $this->theme; ?>/img/icon-facebook-16.png" width="16" height="16" alt="Facebook"> Facebook</a></li>
+				<li><a href="#" class="addthis_button_yotube"><img src="/theme/<?php echo $this->theme; ?>/img/icon-youtube-16.png" width="16" height="16" alt="YouTube"> YouTube</a></li>
+			</ul>
+		</div>
+	
+		
+		<div class="row community-items">
+			<div class="span10">
+				<div class="row-fluid">
+					<div class="span8">
+						<?php foreach($featuredCmsPosts as $cmsPost): ?>
+						<article class="community-item" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']; ?>;">
+							<?php if(count($cmsPost['Attachment']) > 0) : ?>
+							<div class="image-holder">
+								<a href="<?php echo $this->Html->url(array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?>">
+									<?php if($cmsPost['CmsPost']['featured']) : ?>
+									<span class="featured" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']?>;">Featured</span>
+									<?php endif; ?>
+									<?php echo $this->Media->embed($this->Media->file("le/{$cmsPost['Attachment'][0]['path']}")) ?>
+								</a>
+							</div>
+							<?php endif; ?>
+							<div class="community-text">
+								<span class="subtitle"><?php echo $this->Html->link($cmsPost['CmsCategory']['name'], array('controller' => 'cms_categories', 'action' => 'display', $cmsPost['CmsCategory']['slug']), array('style' => 'border-left-color: ' . $cmsPost['CmsCategory']['color'],)); ?></span>
+								<h2 class="title"><?php echo $this->Html->link($cmsPost['CmsPost']['name'], array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></h2>
+								<time class="community-date"><?php echo $this->Time->format('F j, Y', $cmsPost['CmsPost']['publish_date']); ?></time>
+								<div class="body">
+									<?php echo String::truncate($cmsPost['CmsPost']['body'], 250); ?>
+									<p class="read-more"><?php echo $this->Html->link('Read More', array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></p>
+								</div>
+							</div>
+						</article>
+						<?php endforeach; ?>
+						<div class="row-fluid">
+							<div class="span6 target1">
+							<?php for($i=0; $i<4; $i+=2) : $cmsPost = $recentCmsPosts[$i]; ?>
+								<article class="community-item" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']; ?>;">
+									<?php if(count($cmsPost['Attachment']) > 0) : ?>
+									<div class="image-holder">
+										<a href="<?php echo $this->Html->url(array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?>">
+											<?php if($cmsPost['CmsPost']['featured']) : ?>
+											<span class="featured" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']?>;">Featured</span>
+											<?php endif; ?>
+											<?php echo $this->Media->embed($this->Media->file("le/{$cmsPost['Attachment'][0]['path']}")) ?>
+										</a>
+									</div>
+									<?php endif; ?>
+									<div class="community-text">
+										<span class="subtitle"><?php echo $this->Html->link($cmsPost['CmsCategory']['name'], array('controller' => 'cms_categories', 'action' => 'display', $cmsPost['CmsCategory']['slug']), array('style' => 'border-left-color: ' . $cmsPost['CmsCategory']['color'],)); ?></span>
+										<h2 class="title"><?php echo $this->Html->link($cmsPost['CmsPost']['name'], array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></h2>
+										<time class="community-date"><?php echo $this->Time->format('F j, Y', $cmsPost['CmsPost']['publish_date']); ?></time>
+										<div class="body">
+											<?php echo String::truncate($cmsPost['CmsPost']['body'], 120); ?>
+											<p class="read-more"><?php echo $this->Html->link('Read More', array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></p>
+										</div>
+									</div>
+								</article>
+							<?php endfor; ?>
+							</div>
+							<div class="span6 target2">
+							<?php for($i=1; $i<4; $i+=2) : $cmsPost = $recentCmsPosts[$i]; ?>
+								<article class="community-item" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']; ?>;">
+									<?php if(count($cmsPost['Attachment']) > 0) : ?>
+									<div class="image-holder">
+										<a href="<?php echo $this->Html->url(array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?>">
+											<?php if($cmsPost['CmsPost']['featured']) : ?>
+											<span class="featured" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']?>;">Featured</span>
+											<?php endif; ?>
+											<?php echo $this->Media->embed($this->Media->file("le/{$cmsPost['Attachment'][0]['path']}")) ?>
+										</a>
+									</div>
+									<?php endif; ?>
+									<div class="community-text">
+										<span class="subtitle"><?php echo $this->Html->link($cmsPost['CmsCategory']['name'], array('controller' => 'cms_categories', 'action' => 'display', $cmsPost['CmsCategory']['slug']), array('style' => 'border-left-color: ' . $cmsPost['CmsCategory']['color'],)); ?></span>
+										<h2 class="title"><?php echo $this->Html->link($cmsPost['CmsPost']['name'], array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug']), array()); ?></h2>
+										<time class="community-date"><?php echo $this->Time->format('F j, Y', $cmsPost['CmsPost']['publish_date']); ?></time>
+										<div class="body">
+											<?php echo String::truncate($cmsPost['CmsPost']['body'], 120); ?>
+											<p class="read-more"><?php echo $this->Html->link('Read More', array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></p>
+										</div>
+									</div>
+								</article>
+							<?php endfor; ?>
+							</div>
+						</div>
+					</div>
+					
+					<div class="span4 target3">
+						<?php for($i=4; $i<count($recentCmsPosts); $i++) : $cmsPost = $recentCmsPosts[$i]; ?>
+						<article class="community-item" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']; ?>;">
+							<?php if(count($cmsPost['Attachment']) > 0) : ?>
+							<div class="image-holder">
+								<a href="<?php echo $this->Html->url(array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?>">
+									<?php if($cmsPost['CmsPost']['featured']) : ?>
+									<span class="featured" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']?>;">Featured</span>
+									<?php endif; ?>
+									<?php echo $this->Media->embed($this->Media->file("le/{$cmsPost['Attachment'][0]['path']}")) ?>
+								</a>
+							</div>
+							<?php endif; ?>
+							<div class="community-text">
+								<span class="subtitle"><?php echo $this->Html->link($cmsPost['CmsCategory']['name'], array('controller' => 'cms_categories', 'action' => 'display', $cmsPost['CmsCategory']['slug']), array('style' => 'border-left-color: ' . $cmsPost['CmsCategory']['color'],)); ?></span>
+								<h2 class="title"><?php echo $this->Html->link($cmsPost['CmsPost']['name'], array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></h2>
+								<time class="community-date"><?php echo $this->Time->format('F j, Y', $cmsPost['CmsPost']['publish_date']); ?></time>
+								<div class="body">
+									<?php echo String::truncate($cmsPost['CmsPost']['body'], 120); ?>
+									<p class="read-more"><?php echo $this->Html->link('Read More', array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></p>
+								</div>
+							</div>
+						</article>
+						<?php endfor; ?>
+					</div>
+				</div>
+				<div id="more">
+					
+				</div>
+				<div class="row-fluid more-separator">
+					<div class="span5"><hr></div>
+					<div class="span2">
+						<a href="#" class="more-items" data-target="#more" data-post='<?php echo json_encode(array('e' => $exclude)); ?>' data-load-url="<?php echo $this->Html->url(array('controller' => 'cms_categories', 'action' => 'posts', 'ext' => 'json')); ?>">View More</a>
+					</div>
+					<div class="span5"><hr></div>
+				</div>
+			</div>
+			
+			<div class="span2">
+				<div class="community-list">
+					<ul class="unstyled subnav">
+						<li class="title right">
+							<a href="#" class="rss">Subscribe via RSS</a>
+						</li>
+						<?php foreach($cmsCategories as $cmsCategory) : ?>
+						<li>
+							<?php echo $this->Html->link($cmsCategory['CmsCategory']['name'], array(
+								'controller' => 'cms_categories', 
+								'action' => 'display', 
+								$cmsCategory['CmsCategory']['slug'],
+							), array(
+								'style' => 'border-left-color: ' . $cmsCategory['CmsCategory']['color'],
+							)); ?>
+						</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+<script type="text/template" class="posts-template">
+	<div class="row-fluid">
+		<div class="span12">
+			<h3 class="separator"><%= separator %></h3>
+		</div>
+	</div>
+	<div class="row-fluid">
+		<div class="span12">
+			<div class="span4">
+				<%= column1 %>
+			</div>
+			<div class="span4">
+				<%= column2 %>
+			</div>
+			<div class="span4">
+				<%= column3 %>
+			</div>
+		</div>
+	</div>
+</script>
+<script type="text/template" class="post-template">
+	<article class="community-item" style="border-bottom-color: <%= CmsCategory.color %>;">
+		<% if(CmsPost.image !== false) { %>
+		<div class="image-holder">
+			<a href="<%= CmsPost.url %>">
+				<% if(CmsPost.featured) { %>
+					<span class="featured" style="border-bottom-color: <%= CmsCategory.color %>;">Featured</span>
+				<% } %>
+				<img src="<%= CmsPost.image %>" alt="<%- CmsPost.name %> Image" />
+			</a>
+		</div>
+		<% } %>
+		<div class="community-text">
+			<span class="subtitle"><a href="<%= CmsCategory.url %>" style="border-left-color: <%= CmsCategory.color %>;"><%- CmsCategory.name %></a></span>
+			<h2 class="title"><a href="<%= CmsPost.url %>"><%- CmsPost.name %></a></h2>
+			<time class="community-date"><%- CmsPost.formatted_date %></time>
+			<div class="body">
+				<%= CmsPost.teaser %>
+				<p class="read-more"><a href="<%= CmsPost.url %>">Read More</a></p>
+			</div>
+		</div>
+	</article>
+</script>

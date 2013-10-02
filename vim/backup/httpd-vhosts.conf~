@@ -1,0 +1,110 @@
+# File last loaded at 2012-11-15 23:58:00
+
+# Modified at 2012-11-15 23:57:29
+# Start sidecart.localhost
+<VirtualHost *:*>
+	ServerAdmin scott@sidestudios.com
+	ServerName sidecart.localhost
+	#ServerAlias www.sidecart.localhost *
+	DocumentRoot "/Users/scott/Repositories/SideCart/webroot"
+	ErrorLog "/private/var/log/apache2/sidecart.localhost-error_log"
+	CustomLog "/private/var/log/apache2/sidecart.localhost-access_log" common
+	<Directory "/Users/scott/Repositories/SideCart/webroot">
+		AllowOverride All
+		Order allow,deny
+		Allow from all
+	</Directory>
+	
+ </VirtualHost>
+# End sidecart.localhost
+
+# Modified at 2012-11-15 23:57:29
+# Start sidecart.dev
+<VirtualHost *:*>
+	ServerAdmin scott@sidestudios.com
+	ServerName sidecart.dev
+	ServerAlias www.sidecart.dev
+	DocumentRoot "/Users/scott/Repositories/SideCart/webroot"
+	ErrorLog "/private/var/log/apache2/sidecart.dev-error_log"
+	CustomLog "/private/var/log/apache2/sidecart.dev-access_log" common
+	<Directory "/Users/scott/Repositories/SideCart/webroot">
+		AllowOverride All
+		Order allow,deny
+		Allow from all
+	</Directory>
+	
+ </VirtualHost>
+# End sidecart.dev
+
+# Modified at 2012-11-15 23:57:29
+# Start sensationailgel.com.localhost
+<VirtualHost *:*>
+	ServerAdmin scott@sidestudios.com
+	ServerName sensationailgel.com.localhost
+	ServerAlias www.sensationailgel.com.localhost
+	DocumentRoot "/Users/scott/Repositories/sensationailgel.com/v3"
+	ErrorLog "/private/var/log/apache2/sensationailgel.com.localhost-error_log"
+	CustomLog "/private/var/log/apache2/sensationailgel.com.localhost-access_log" common
+	<Directory "/Users/scott/Repositories/sensationailgel.com/v3">
+		AllowOverride All
+		Order allow,deny
+		Allow from all
+	</Directory>
+	
+ </VirtualHost>
+# End sensationailgel.com.localhost
+
+# Modified at 2012-11-15 23:57:29
+# Start sensationailgel.com.dev
+<VirtualHost *:*>
+	ServerAdmin scott@sidestudios.com
+	ServerName sensationailgel.com.dev
+	ServerAlias www.sensationailgel.com.dev
+	DocumentRoot "/Users/scott/Repositories/sensationailgel.com/v3"
+	ErrorLog "/private/var/log/apache2/sensationailgel.com.dev-error_log"
+	CustomLog "/private/var/log/apache2/sensationailgel.com.dev-access_log" common
+	<Directory "/Users/scott/Repositories/sensationailgel.com/v3">
+		AllowOverride All
+		Order allow,deny
+		Allow from all
+	</Directory>
+	
+ </VirtualHost>
+# End sensationailgel.com.dev
+
+# Modified at 2012-11-15 23:55:11
+# Start laurashouse.org.localhost
+<VirtualHost *:*>
+	ServerAdmin scott@sidestudios.com
+	ServerName laurashouse.org.localhost
+	ServerAlias www.laurashouse.org.localhost
+	DocumentRoot "/Users/scott/Repositories/laurashouse.org"
+	ErrorLog "/private/var/log/apache2/laurashouse.org.localhost-error_log"
+	CustomLog "/private/var/log/apache2/laurashouse.org.localhost-access_log" common
+	<Directory "/Users/scott/Repositories/laurashouse.org">
+		AllowOverride All
+		Order allow,deny
+		Allow from all
+	</Directory>
+	Alias /lhteendev/ /Users/scott/Repositories/laurashouse.org/lhteen/
+ </VirtualHost>
+# End laurashouse.org.localhost
+
+# Modified at 2012-11-15 23:55:11
+# Start laurashouse.org.dev
+<VirtualHost *:*>
+	ServerAdmin scott@sidestudios.com
+	ServerName laurashouse.org.dev
+	ServerAlias www.laurashouse.org.dev
+	DocumentRoot "/Users/scott/Repositories/laurashouse.org"
+	ErrorLog "/private/var/log/apache2/laurashouse.org.dev-error_log"
+	CustomLog "/private/var/log/apache2/laurashouse.org.dev-access_log" common
+	<Directory "/Users/scott/Repositories/laurashouse.org">
+		AllowOverride All
+		Order allow,deny
+		Allow from all
+	</Directory>
+	Alias /lhteendev/ /Users/scott/Repositories/laurashouse.org/lhteen/
+ </VirtualHost>
+# End laurashouse.org.dev
+

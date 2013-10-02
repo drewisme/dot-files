@@ -1,0 +1,67 @@
+<div class="mantles form">
+<?php 
+	echo $this->Form->create('Mantle', array(
+		'enctype' => 'multipart/form-data',
+		'class' => 'form-horizontal',
+		'inputDefaults' => array(
+			'div' => 'control-group',
+			'label' => array('class' => 'control-label'),
+			'between' => '<div class="controls">',
+			'after' => '</div>',
+			'error' => array('attributes' => array('class' => 'controls help-block'))
+		)
+	));
+?>
+	<fieldset>
+		<legend><?php echo __('Add Mantle'); ?></legend>
+	<?php
+		echo $this->Form->input('active', array(
+			'checked' => true,
+			'label' => array('class' => 'checkbox inline', 'style' => 'padding-left:8px;'),
+			'before' => '<div class="controls">',
+			'between' => '',
+			'after' => '</div>',
+		));
+		echo $this->Form->input('name');
+		echo $this->Form->input('url');
+		echo $this->Form->input('url_target', array(
+			'options' => array('_self' => 'Same Window', '_blank' => 'New Window')
+		));
+	?>
+		<div class="control-group">
+			<?php echo $this->Form->label('product_id', 'Product Link', array('class' => 'control-label')); ?>
+			<div class="controls">
+			<?php
+				echo $this->Chosen->select('product_id',
+					$products,
+					array(
+						'data-placeholder' => 'Add product...',
+						'class' => 'chzn-select-deselect',
+					)
+				);
+			?>
+			</div>
+		</div>
+
+		<hr />
+
+		<?php echo isset($this->validationErrors['Attachment']['Attachment']) ? '<div class="alert alert-error">' . $this->validationErrors['Attachment']['Attachment'][0] . '</div>' : '' ?>
+		
+		<h4>Image (1170px by 410px) <?php echo $this->Html->link('Example PSD', '/files/templates/' . Configure::read('Setting.theme') . '/mantle.psd') ?> <a href="#" rel="popover" data-title="Image" data-content="Main Image"><i class="icon-question-sign"></i></a></h4>
+		<?php echo $this->element('admin/attachments', array('model' => 'Mantle', 'max' => 1, 'start' => 0, 'group' => 'main')); ?>
+
+		<h4>Background Image (optional) <?php echo $this->Html->link('Example PSD', '/files/templates/' . Configure::read('Setting.theme') . '/mantle-bg.psd') ?> <a href="#" rel="popover" data-title="Background Image" data-content="Background can be any size and will be positioned centered behind the main image. Lower web quality jpg on black background recommended."><i class="icon-question-sign"></i></a></h4>
+		<?php echo $this->element('admin/attachments', array('model' => 'Mantle', 'max' => 1, 'start' => 1, 'group' => 'background')); ?>
+
+		<?php echo $this->element('admin/videos', array('max' => 1, 'videos' => $this->request->data['Video'], 'model' => 'Mantle', 'foreign_key' => $this->request->data['Mantle']['id'])); ?>
+	</fieldset>
+<?php 
+	echo $this->Form->submit(__('Save'), array(
+			'div' => 'form-actions',
+			'class' => 'btn btn-large btn-primary btn-save',
+			'data-loading-text' => 'Please Wait...',
+			'after' => ' 	' . $this->Html->link(__('Cancel'), array('admin' => true, 'action' => 'index'), array('class' => 'btn btn-large'))
+		));
+	echo $this->Form->end();
+?>
+</div>

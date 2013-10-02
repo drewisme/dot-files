@@ -1,0 +1,236 @@
+<?php
+	$this->Crumb->addCrumb('Home', '/');
+?>
+
+<?php echo $this->element('mantle', array('mantles' => $page['Mantle'])) ?>
+
+<section class="background-black background-black-1 hero-top">
+	<div class="container">
+		<h1 class="row heading">
+			<div class="span12">
+				<div class="title pull-left">
+					<span>COMMUNITY</span>
+					<div class="slash"></div>
+				</div>
+				<div class="border-holder">
+					<div class="border"></div>
+				</div>
+				<div class="viewall">
+					<?php echo $this->Html->link('VIEW ALL', array('controller' => 'cms_categories', 'action' => 'index')) ?>
+				</div>
+			</div>
+		</h1>
+		<div class="row social-holder">
+			<ul class="unstyled pull-right social-list addthis_toolbox">
+				<li><a href="#" class="addthis_button_twitter"><img src="/theme/<?php echo $this->theme; ?>/img/icon-twitter-16.png" width="16" height="16" alt="Twitter"/> Twitter</a></li>
+				<li><a href="#" class="addthis_button_facebook"><img src="/theme/<?php echo $this->theme; ?>/img/icon-facebook-16.png" width="16" height="16" alt="Facebook"/> Facebook</a></li>
+				<li><a href="#" class="addthis_button_youtube"><img src="/theme/<?php echo $this->theme; ?>/img/icon-youtube-16.png" width="16" height="16" alt="YouTube"/> YouTube</a></li>
+			</ul>
+		</div>
+		<div class="row community-items">
+			<div class="span4">
+				<!-- <article class="community-item border-2">
+					<div class="image-holder"><a href="#"><img src="http://placehold.it/370x280"/></a></div>
+				</article>
+				<article class="community-item">
+					<div class="image-holder"><a href="#"><img src="http://placehold.it/370x120"/></a></div>
+					<div class="community-text">
+						<span class="subtitle">HPI DIGITAL CALENDAR</span>
+						<span class="title"><a href="#">DOWNLOAD AUGUST CALENDAR</a></span>
+					</div>
+				</article> -->
+				<?php foreach($featuredCmsPosts as $cmsPost): ?>
+				<article class="community-item" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']; ?>;">
+					<?php if(count($cmsPost['Attachment']) > 0) : ?>
+					<div class="image-holder">
+						<a href="<?php echo $this->Html->url(array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?>">
+							<?php if($cmsPost['CmsPost']['featured']) : ?>
+							<span class="featured" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']?>;">Featured</span>
+							<?php endif; ?>
+							<?php echo $this->Media->embed($this->Media->file("le/{$cmsPost['Attachment'][0]['path']}")) ?>
+						</a>
+					</div>
+					<?php endif; ?>
+					<div class="community-text">
+						<span class="subtitle"><?php echo $this->Html->link($cmsPost['CmsCategory']['name'], array('controller' => 'cms_categories', 'action' => 'display', $cmsPost['CmsCategory']['slug']), array('style' => 'border-left-color: ' . $cmsPost['CmsCategory']['color'],)); ?></span>
+						<h2 class="title"><?php echo $this->Html->link($cmsPost['CmsPost']['name'], array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></h2>
+						<time class="community-date"><?php echo $this->Time->format('F j, Y', $cmsPost['CmsPost']['publish_date']); ?></time>
+						<div class="body">
+							<?php echo String::truncate($cmsPost['CmsPost']['body'], 120); ?>
+							<p class="read-more"><?php echo $this->Html->link('Read More', array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></p>
+						</div>
+					</div>
+				</article>
+				<?php endforeach; ?>
+			</div>
+			<div class="span4">
+				<?php for($i=0; $i<4; $i+=2) : $cmsPost = $recentCmsPosts[$i]; ?>
+					<article class="community-item" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']; ?>;">
+						<?php if(count($cmsPost['Attachment']) > 0) : ?>
+						<div class="image-holder">
+							<a href="<?php echo $this->Html->url(array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?>">
+								<?php if($cmsPost['CmsPost']['featured']) : ?>
+								<span class="featured" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']?>;">Featured</span>
+								<?php endif; ?>
+								<?php echo $this->Media->embed($this->Media->file("le/{$cmsPost['Attachment'][0]['path']}")) ?>
+							</a>
+						</div>
+						<?php endif; ?>
+						<div class="community-text">
+							<span class="subtitle"><?php echo $this->Html->link($cmsPost['CmsCategory']['name'], array('controller' => 'cms_categories', 'action' => 'display', $cmsPost['CmsCategory']['slug']), array('style' => 'border-left-color: ' . $cmsPost['CmsCategory']['color'],)); ?></span>
+							<h2 class="title"><?php echo $this->Html->link($cmsPost['CmsPost']['name'], array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></h2>
+							<time class="community-date"><?php echo $this->Time->format('F j, Y', $cmsPost['CmsPost']['publish_date']); ?></time>
+							<div class="body">
+								<?php echo String::truncate($cmsPost['CmsPost']['body'], 120); ?>
+								<p class="read-more"><?php echo $this->Html->link('Read More', array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></p>
+							</div>
+						</div>
+					</article>
+				<?php endfor; ?>
+			</div>
+			<div class="span4">
+				<?php for($i=1; $i<4; $i+=2) : $cmsPost = $recentCmsPosts[$i]; ?>
+					<article class="community-item" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']; ?>;">
+						<?php if(count($cmsPost['Attachment']) > 0) : ?>
+						<div class="image-holder">
+							<a href="<?php echo $this->Html->url(array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?>">
+								<?php if($cmsPost['CmsPost']['featured']) : ?>
+								<span class="featured" style="border-bottom-color: <?php echo $cmsPost['CmsCategory']['color']?>;">Featured</span>
+								<?php endif; ?>
+								<?php echo $this->Media->embed($this->Media->file("le/{$cmsPost['Attachment'][0]['path']}")) ?>
+							</a>
+						</div>
+						<?php endif; ?>
+						<div class="community-text">
+							<span class="subtitle"><?php echo $this->Html->link($cmsPost['CmsCategory']['name'], array('controller' => 'cms_categories', 'action' => 'display', $cmsPost['CmsCategory']['slug']), array('style' => 'border-left-color: ' . $cmsPost['CmsCategory']['color'],)); ?></span>
+							<h2 class="title"><?php echo $this->Html->link($cmsPost['CmsPost']['name'], array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></h2>
+							<time class="community-date"><?php echo $this->Time->format('F j, Y', $cmsPost['CmsPost']['publish_date']); ?></time>
+							<div class="body">
+								<?php echo String::truncate($cmsPost['CmsPost']['body'], 120); ?>
+								<p class="read-more"><?php echo $this->Html->link('Read More', array('controller' => 'cms_posts', 'action' => 'display', $cmsPost['CmsPost']['slug'])); ?></p>
+							</div>
+						</div>
+					</article>
+				<?php endfor; ?>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="background-white-1">
+	<div class="container">
+		<h1 class="row heading">
+			<div class="span12">
+				<div class="title pull-left">
+					<span class="subtitle"><?php echo Configure::read('Setting.Company.name'); ?></span>
+					<span>FEATURED PRODUCTS</span>
+					<div class="slash"></div>
+				</div>
+				<div class="border-holder">
+					<a href="#" class="gototop">TOP</a>
+					<div class="border"></div>
+				</div>
+				<div class="viewall">
+					<a href="#">VIEW ALL</a>
+				</div>
+			</div>
+		</h1>
+		<?php if(count($homeFeaturedProducts) > 0) : ?>
+			<ul class="row products-list">
+			<?php foreach($homeFeaturedProducts as $product): ?>
+				<li class="span3">
+					<div class="image-holder">
+						<a href="<?php echo $this->Html->url(array('controller' => 'carts', 'action' => 'add', $product['Product']['id']))?>" class="quickcart">ADD TO CART</a>
+						<a href="<?=$this->Sidecart->productUrl($product['Product'])?>">
+							<?php echo $this->Html->image($this->Media->url("m/{$product['Attachment'][0]['path']}")); ?>
+							<?php echo $this->Sidecart->priceFormat($product['Product'], '
+								<img src="/theme/' . $this->theme . '/img/sale-triangle.png" class="sale-triangle :sale_status">
+							'); ?>
+						</a>
+						<a href="<?php echo $this->Sidecart->productUrl($product['Product'], true, array('action' => 'quick'))?>" class="quickview">QUICK VIEW</a>
+					</div>
+					<?php 
+					echo $this->Sidecart->priceFormat($product['Product'], '
+					<a href=":product_url">
+						<strong>:name</strong>
+						<span class="price">:price</span>
+					</a>
+					'); 
+					?>
+				</li>
+			<?php endforeach; ?>
+			</ul>
+		<?php endif ?>
+
+		<h1 class="row heading">
+			<div class="span12">
+				<div class="title pull-left">
+					<span class="subtitle"><?php echo Configure::read('Setting.Company.name'); ?></span>
+					<span>BEST SELLERS</span>
+					<div class="slash"></div>
+				</div>
+				<div class="border-holder">
+					<a href="#" class="gototop">TOP</a>
+					<div class="border"></div>
+				</div>
+				<div class="viewall">
+					<a href="#">VIEW ALL</a>
+				</div>
+			</div>
+		</h1>
+
+		<?php if(count($homeBestSellerProducts) > 0) : ?>
+			<?php 
+				for($i = 0; $i < 1; $i++): 
+					$product = $homeBestSellerProducts[$i];
+			?>
+			<div class="row products-feature">
+				<div class="span7">
+					<a href="<?=$this->Sidecart->productUrl($product['Product'])?>">
+						<?php echo $this->Html->image($this->Media->url("le/{$product['Attachment'][0]['path']}")); ?>
+					</a>
+				</div>
+				<div class="span4">
+					<h3><a href="<?=$this->Sidecart->productUrl($product['Product'])?>"><?php echo $this->Sidecart->breakTitle($product['Product']['name'], 20) ?></a></h3>
+					<p><?php echo String::truncate($product['Product']['description'], 250); ?></p>
+					<div class="buy-box">
+						<a href="<?php echo $this->Html->url(array('controller' => 'carts', 'action' => 'add', $product['Product']['id']))?>" class="btn-buynow">BUY NOW</a>
+						<?php 
+						echo $this->Sidecart->priceFormat($product['Product'], '<strong class="price">:price</strong>'); 
+						?>
+					</div>
+					<p><a href="<?=$this->Sidecart->productUrl($product['Product'])?>" class="primary-link"><strong>Lean More</strong></a></p>
+				</div>
+			</div>
+			<?php endfor ?>
+
+			<ul class="row products-list">
+			<?php 
+				for($i = 1; $i < count($homeBestSellerProducts); $i++): 
+					$product = $homeBestSellerProducts[$i];
+			?>
+				<li class="span3">
+					<div class="image-holder">
+						<a href="<?php echo $this->Html->url(array('controller' => 'carts', 'action' => 'add', $product['Product']['id']))?>" class="quickcart">ADD TO CART</a>
+						<a href="<?=$this->Sidecart->productUrl($product['Product'])?>">
+							<?php echo $this->Html->image($this->Media->url("m/{$product['Attachment'][0]['path']}")); ?>
+							<?php echo $this->Sidecart->priceFormat($product['Product'], '
+								<img src="/theme/' . $this->theme . '/img/sale-triangle.png" class="sale-triangle :sale_status">
+							'); ?>
+						</a>
+						<a href="<?php echo $this->Sidecart->productUrl($product['Product'], true, array('action' => 'quick'))?>" class="quickview">QUICK VIEW</a>
+					</div>
+					<?php 
+					echo $this->Sidecart->priceFormat($product['Product'], '
+					<a href=":product_url">
+						<strong>:name</strong>
+						<span class="price">:price</span>
+					</a>
+					'); 
+					?>
+				</li>
+			<?php endfor ?>
+			</ul>
+		<?php endif ?>
+	</div>
+</section>

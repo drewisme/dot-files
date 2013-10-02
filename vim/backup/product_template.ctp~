@@ -1,0 +1,16 @@
+<script type="text/template" class="product-template template">
+	<li class="span3">
+		<div class="image-holder">
+			<a href="/carts/add/<%= id %>" class="quickcart">ADD TO CART</a>
+			<a href="<%= url %>">
+				<img src="/media/filter/m/<%= Attachment[0].path.replace('jpeg', 'jpg') %>" alt="<%= name %> Image" />
+				<img src="/theme/HPI/img/sale-triangle.png" class="sale-triangle <%= sale_status %>">
+			</a>
+			<a href="<%= quick_url %>" class="quickview">QUICK VIEW</a>
+		</div>
+		<a href="<%= url %>">
+			<strong><%- name %></strong>
+			<span class="price">$<%- current_price %></span>
+		</a>
+	</li>
+</script>

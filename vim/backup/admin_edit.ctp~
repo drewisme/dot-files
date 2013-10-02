@@ -1,0 +1,143 @@
+<div class="products form">
+<?php
+	// Manually set errors for the required attribute fields
+	if(isset($invalidAttributeFields)) {
+		$this->validationErrors['Attribute']['Attribute'] = $invalidAttributeFields;
+	}
+	echo $this->Form->create('Product', array(
+		'enctype' => 'multipart/form-data',
+		'class' => 'form-horizontal',
+		'inputDefaults' => array(
+			'div' => 'control-group',
+			'label' => array('class' => 'control-label'),
+			'between' => '<div class="controls">',
+			'after' => '</div>',
+			'error' => array('attributes' => array('class' => 'controls help-block'))
+		)
+	));
+	$link = $this->Html->url(array('controller' => 'products', 'action' => 'index', 'admin' => false, 'full_base' => true, $this->request->data['Product']['category_slug'], $this->request->data['Product']['slug']));
+?>
+		<div class="pull-right center-text qr-container">
+			<img src="http://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<?php echo $link; ?>" alt="QR Code for Page" />
+			<br />
+			<a href="http://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<?php echo $link; ?>" target="_blank" class="btn btn-mini qr-code"><i class="icon icon-qrcode"></i> QR Code for Page</a>
+		</div>
+	<fieldset>
+		<legend><?php echo __('Edit Product'); ?> - <a href="<?php echo $link; ?>" target="_blank"><?php echo $link; ?></a></legend>
+		<h4>Product Details</h4>
+		<!-- <ul class="nav nav-tabs">
+			<li class="active">
+				<a href="#">English</a>
+			</li>
+		</ul> -->
+	<?php
+		echo $this->Form->input('id');
+		echo $this->Form->input('active', array(
+			'checked' => true,
+			'label' => array('class' => 'checkbox inline', 'style' => 'padding-left:8px;'),
+			'before' => '<div class="controls">',
+			'between' => '',
+			'after' => '</div>',
+		));
+		echo $this->Form->input('entity_template_id', array('label' => array('class' => 'control-label', 'text' => 'Product Template')));
+		echo $this->Form->input('product_status_id', array('empty' => __('Select One'), 'text' => 'Product Status'));
+
+		echo $this->Form->input('category_id', array(
+			'label' => array('class' => 'control-label', 'text' => 'Primary Category'),
+			'class' => 'chzn-select',
+			'data-placeholder' => 'Choose default category...',
+			'multiple' => false,
+		));
+		echo $this->Form->input('Category', array(
+			'label' => array('class' => 'control-label', 'text' => 'Categories'),
+			'class' => 'chzn-select',
+			'data-placeholder' => 'Add categories...',
+			'multiple' => true,
+		));
+		echo $this->Form->input('sku');
+		echo $this->Form->input('upc');
+		echo $this->Form->input('name');
+		echo $this->Form->input('slug', array(
+			'label' => array('text' => __('URL'), 'class' => 'control-label'),
+			'after' => '<div class="help-inline"> <a href="#" class="update-slug" title="Generate new url from name" rel="tooltip"><small>Update</a></small></div></div>',
+		));
+		echo $this->Form->input('description');
+		echo $this->Form->input('quantity');
+		echo $this->Form->input('price');
+		echo $this->Form->input('sale_price');
+		echo $this->Form->input('weight');
+		?>
+
+		<?php if(count($this->request->data['ChildProduct']) > 0) : ?>
+			<h4>Product Options</h4>
+			<table class="table table-striped table-condensed table-hover">
+				<thead>
+					<tr>
+						<th>Image</th>
+						<th>UPC</th>
+						<th>Qty.</th>
+						<th>Price</th>
+						<th>Sale Price</th>
+						<th>Weight</th>
+						<?php foreach($this->request->data['Attribute'] as $attr) : ?>
+						<th><?php echo $attr['name']?></th>
+						<?php endforeach; ?>
+					</tr>
+				</thead>
+				<tbody>
+				<?php foreach($this->request->data['ChildProduct'] as $key => $option) : 
+					$defaults = array(
+						'div' => '',
+						'label' => false,
+						'between' => '',
+						'after' => '',
+						'error' => array('attributes' => array('class' => 'controls help-block')),
+						'class' => 'input input-medium',
+					);
+					?>
+					<tr>
+						<td>
+							<?php echo $this->Form->hidden("ChildProduct.$key.id", array('id' => $option['id'])); ?>
+							<?php echo count($option['Attachment']) > 0 ? $this->Media->embed($this->Media->file("s/{$option['Attachment'][0]['path']}"), array('restrict' => array('image'), 'width' => 50)) : ''; ?>
+							&nbsp;
+						</td>
+						<td><?php echo $this->Form->input("ChildProduct.$key.upc", $defaults + array('value' => $option['upc'])); ?></td>
+						<td><?php echo $this->Form->input("ChildProduct.$key.quantity", $defaults + array('value' => $option['quantity'])); ?></td>
+						<td><?php echo $this->Form->input("ChildProduct.$key.price", $defaults + array('value' => $option['price'])); ?></td>
+						<td><?php echo $this->Form->input("ChildProduct.$key.sale_price", $defaults + array('value' => $option['sale_price'])); ?></td>
+						<td><?php echo $this->Form->input("ChildProduct.$key.weight", $defaults + array('value' => $option['weight'])); ?></td>
+						<?php foreach($option['Attribute'] as $attr) : ?>
+						<td><?php echo $attr['AttributesValue']['value']; ?>&nbsp;</td>
+						<?php endforeach; ?>
+					</tr>
+				<?php endforeach; ?>
+				<tbody>
+			</table>
+		<?php endif; ?>
+		<hr />
+
+		<h4>Images <a href="#" rel="popover" data-title="Images" data-content="First image will be used as main product image. Drag and drop to sort images."><i class="icon-question-sign"></i></a></h4>
+		<?php echo $this->element('admin/attachments', array('model' => 'Product', 'max' => 20)); ?>
+
+		<?php echo $this->element('admin/attributes', array('model' => 'Product')); ?>
+
+		<?php echo $this->element('admin/product_features'); ?>
+
+		<?php echo $this->element('admin/related_products'); ?>
+
+		<?php echo $this->element('admin/videos', array('videos' => $this->request->data['Video'], 'model' => 'Product', 'foreign_key' => $this->request->data['Product']['id'])); ?>
+
+		<?php echo $this->element('admin/meta', array('model' => 'Product')); ?>
+
+
+	</fieldset>
+<?php 
+	echo $this->Form->submit(__('Save'), array(
+			'div' => 'form-actions',
+			'class' => 'btn btn-large btn-primary btn-save',
+			'data-loading-text' => 'Please Wait...',
+			'after' => ' 	' . $this->Html->link(__('Cancel'), array('admin' => true, 'controller' => 'products', 'action' => 'index'), array('class' => 'btn btn-large'))
+		));
+	echo $this->Form->end();
+?>
+</div>

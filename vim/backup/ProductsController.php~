@@ -1,0 +1,484 @@
+<?php
+App::uses('AppController', 'Controller');
+/**
+ * Products Controller
+ *
+ * @property Product $Product
+ */
+class ProductsController extends AppController {
+
+	var $uses = array('Product', 'Category', 'ProductFeature', 'RelatedProductType', 'RelatedProducts', 'RelatedProduct', 'AttributeCategory', 'AttributesValue');
+
+	public $helpers = array('Html', 'Form', 'Sidecart');
+
+/**
+ * beforeFilter
+ * @return void
+ */
+	public function beforeFilter() {
+		parent::beforeFilter();
+
+		$this->_initAdminSidebar(array('categories', 'products', 'product_features'));
+		$this->Auth->allow('*');
+	}
+
+/**
+ * Product Details 
+ * @return void
+ */
+	public function index($category_slug = null, $product_slug = null) {
+		$product = $this->_get_product($category_slug, $product_slug);
+		$similar_products = $this->findSimilarProducts($product['Product']['id']);
+		$parts = $this->findRelatedProducts($product['Product']['id'], 'parts', 0, array('Attachment', 'DefaultCategory'));
+		$specs = $this->findAttributes($product['Product']['id'], 'specifications');
+		$this->set(compact('similar_products', 'parts', 'specs'));
+	}
+
+	public function quick($category_slug = null, $product_slug = null) {
+		$this->layout = 'ajax';
+		$this->_get_product($category_slug, $product_slug);
+	}
+
+	public function _get_product($category_slug = null, $product_slug = null){
+		$this->Product->Behaviors->attach('Containable');
+		$this->Product->contain(array(
+			'DefaultCategory',
+			'Category',
+			'Attachment',
+			'Meta',
+			'ProductFeature' => array(
+				'Attachment',
+			),
+			'Video',
+			'Attribute',
+		));
+		$product = $this->Product->findBySlug($product_slug);
+		if (!$product) {
+			throw new NotFoundException(__('Invalid product'));
+		}
+
+		// Price
+		/*$product['Product']['price'] = '$' . $product['Product']['price'];
+		if($product['Product']['sale_price'] > 0){
+			$product['Product']['price'] = '$' . $product['Product']['sale_price'];
+			$product['Product']['discounted'] = '$' . $product['Product']['price'];
+		}*/
+
+		// Meta
+		$title_for_layout = $product['Product']['name'];
+		if(!empty($product['Meta']))
+			$this->setMeta($product['Meta'][0]);
+
+		$this->set(compact('product'));
+
+		$this->Cart->add_viewed($product['Product']['id']);
+
+		return $product;
+	}
+
+	/**
+	 * Find Products related to the product $product_id based on the related_type_slug
+	 * @param  integer  $product_id         id of the product to find related products to
+	 * @param  string   $related_type_slug  the type of related products to find. Field is in related_product_types.slug
+	 * @param  integer  $limit              the number of products to return
+	 * @param  array    $containable        an array of containable items to find from the products table
+	 * @return array                        the list of products found related to $product_id
+	 */
+	public function findRelatedProducts($product_id, $related_type_slug, $limit = 0, $containable = array()) {
+		// First we get the RelatedProductType id by it's slug
+		$related_product_type_id = $this->RelatedProductType->field('id', array('slug' => $related_type_slug));
+		
+		// Then we query the join table to find the related ID's
+		$related_products = $this->RelatedProduct->find('all', array('conditions' => array(
+			'related_product_type_id' => $related_product_type_id,
+			'product_id' => $product_id,
+		)));
+		if(empty($related_products)) {
+			return array();
+		}
+
+		if(!is_array($containable) || count($containable) <= 0) {
+			$containable = array('Attachment', 'DefaultCategory');
+		}
+		$this->Product->Behaviors->attach('Containable');
+		$this->Product->contain($containable);
+
+		return $this->Product->find('all', array(
+			'conditions' => array(
+				'Product.id' => Set::extract($related_products, '{n}.RelatedProduct.related_product_id'),
+				'Product.id !=' => $product_id,
+			),
+			'limit' => $limit,
+		));
+	}
+
+	/**
+	 * Find other products in this product's main category
+	 * @param  integer  $product_id   the id of the product to find similar products to
+	 * @param  integer  $limit        the number of products to return
+	 * @param  array    $containable  an array of containable items to find from the products table
+	 * @return array                  the list of products found in the same category as the $product_id product
+	 */
+	public function findSimilarProducts($product_id, $limit = 5, $containable = array()) {
+		$this->Product->id = $product_id;
+		$category_id = $this->Product->field('category_id');
+
+		if(!is_array($containable) || count($containable) <= 0) {
+			$containable = array('Attachment', 'DefaultCategory');
+		}
+		$this->Product->Behaviors->attach('Containable');
+		$this->Product->contain($containable);
+
+		return $this->Product->find('all', array(
+			'conditions' => array(
+				'Product.category_id' => $category_id,
+				'Product.id !=' => $product_id,
+			),
+			'limit' => $limit,
+		));
+	}
+
+	public function findAttributes($product_id, $attribute_category_slug){
+		// First we get the attributes that have the attribute category slug
+		$attributes = $this->Product->Attribute->find('all', array(
+			'conditions' => array(
+				'AttributeCategory.slug' => $attribute_category_slug,
+				'Attribute.model' => $this->Product->alias,
+			),
+			'contain' => array(
+				'AttributeCategory',
+			),
+		));
+		if(empty($attributes)) {
+			return false;
+		}
+		// Extract the attribute_ids
+		$attribute_ids = Set::extract($attributes, '{n}.Attribute.id');
+		// Bind the model, why do I have to do this???
+		$this->AttributesValue->bindModel(array('belongsTo' => array(
+			'Attribute' => array(
+				'className' => 'Attribute',
+				'foreignKey' => 'attribute_id',
+				'conditions' => '',
+				'fields' => '',
+				'order' => ''
+			),
+		)));
+		// Return the actual attributes and their values
+		return $this->AttributesValue->find('all', array(
+			'conditions' => array(
+				'AttributesValue.attribute_id' => $attribute_ids,
+				'AttributesValue.foreign_key' => $product_id,
+			),
+			'contain' => array(
+				'Attribute',
+			),
+		));
+	}
+
+/**
+ * Get all products in category as json
+ * @param  string $slug Category slug
+ * @return void
+ */
+	public function all($slug = null) {
+		$products = array();
+		if($slug){	
+			$category = $this->Category->findBySlug($slug);
+			if(!$category){
+				throw new NotFoundException(__('Category not found'));
+			} else if($category['Category']['parent_id']) {
+				$children = $this->Category->find('list', array(
+					'fields' => array('id', 'id'),
+					'conditions' => array(
+						'Category.parent_id' => $category['Category']['id'],
+					),
+				));
+				if($children){
+					$children[] = $category['Category']['id'];
+					$conditions['Category.id'] = $children;
+				} else {
+					$conditions['Category.id'] = $category['Category']['id'];
+				}
+			} else {
+				$conditions['Category.id'] = $category['Category']['id'];
+			}
+			
+			$this->Category->Behaviors->attach('Containable');
+			$categories = $this->Category->find('all', array(
+				'contain' => array(
+					'Product' => array(
+						'Attachment' => array(
+							'limit' => 1
+						),
+					),
+				),
+				'conditions' => $conditions,
+			));
+			
+			foreach($categories as $category){
+				$products['Product'][] = $category['Product'];
+			}
+		}
+		return new CakeResponse(array('body' => json_encode($products)));
+	}
+
+	public function admin_view($id) {
+		$this->recursion = 2;
+		debug($this->Product->find('first', array('conditions' => array('Product.id' => $id), 'recursive' => 2)));
+	}
+
+/**
+ * index method
+ *
+ * @return void
+ */
+	public function admin_index() {
+		$this->paginate = array(
+			'Product' => array(
+				'contain' => array(
+					'Attachment' => array(
+						'limit' => 1,
+					),
+					'Category',
+				),
+			),
+		);
+		$this->set('products', $this->paginate('Product'));
+	}
+
+/**
+ * add method
+ *
+ * @return void
+ */
+	public function admin_add() {
+		$this->recursive = 2;
+		if ($this->request->is('post')) {
+			$this->Product->create();
+			$this->request->data['Category']['Category'][] = $this->request->data['Product']['category_id'];
+			$this->Product->Category->id = $this->request->data['Product']['category_id'];
+			$this->request->data['Product']['category_slug'] = $this->Product->Category->field('slug');
+			$invalidAttributeFields = array();
+			foreach($this->data['Attribute']['Attribute'] as $key => $attribute) {
+				if($attribute['required'] && trim($attribute['value']) === '') {
+					$invalidAttributeFields[$key] = array('value' => array('This field is required'));
+				}
+			}
+
+			if(count($invalidAttributeFields) > 0) {
+				$this->set(compact('invalidAttributeFields'));
+				$this->Product->set($this->request->data);
+				$this->Product->validates();
+				$this->Session->setFlash(__('The product could not be saved. Please, try again.'), 'default', array(), 'error');
+			} elseif ($this->Product->saveAll($this->request->data)) {
+				$this->Session->setFlash(__('The product has been saved'), 'default', array(), 'success');
+				$this->redirect(array('action' => 'index'));
+			} else {
+				$this->Session->setFlash(__('The product could not be saved. Please, try again.'), 'default', array(), 'error');
+			}
+		}
+
+		if(array_key_exists('Product', $this->request->data) && array_key_exists('entity_template_id', $this->request->data['Product'])) {
+			$entityAttributes = $this->Product->EntityTemplate->Attribute->find('all', array('conditions' => array('Attribute.entity_template_id' => $this->request->data['Product']['entity_template_id'])));
+		}
+		Configure::write('debug', 0);
+		$this->set(compact('entityAttributes'));
+		$categories = $this->Product->Category->generateTreeList(null,null,null," - ");
+		$this->set(compact('categories'));
+		$entityTemplates = $this->Product->EntityTemplate->find('list');
+		$allFeatures = $this->ProductFeature->find('all');
+		$relatedProductTypes = $this->RelatedProductType->find('all', array('order' => 'id'));
+		$this->set(compact('categories', 'entityTemplates', 'allFeatures', 'relatedProductTypes'));
+	}
+
+/**
+ * edit method
+ *
+ * @throws NotFoundException
+ * @param string $id
+ * @return void
+ */
+	public function admin_edit($id = null) {
+		$this->Product->recursive = 2;
+		$this->Product->id = $id;
+		if (!$this->Product->exists()) {
+			throw new NotFoundException(__('Invalid product'));
+		}
+		if ($this->request->is('post') || $this->request->is('put')) {
+			$this->request->data['Category']['Category'][] = $this->request->data['Product']['category_id'];
+			$this->Product->Category->id = $this->request->data['Product']['category_id'];
+			$this->request->data['Product']['category_slug'] = $this->Product->Category->field('slug');
+			$invalidAttributeFields = array();
+			foreach($this->data['Attribute']['Attribute'] as $key => $attribute) {
+				if($attribute['required'] && trim($attribute['value']) === '') {
+					$invalidAttributeFields[$key] = array('value' => array('This field is required'));
+				}
+			}
+
+			if(count($invalidAttributeFields) > 0) {
+				$this->set(compact('invalidAttributeFields'));
+				$this->Product->set($this->request->data);
+				$this->Product->validates();
+				$this->Session->setFlash(__('The product could not be saved. Please, try again.'), 'default', array(), 'error');
+			} elseif ($this->Product->saveAll($this->request->data)) {
+				$this->Session->setFlash(__('The product has been saved'), 'default', array(), 'success');
+				$this->redirect(array('action' => 'index'));
+			} else {
+				$this->Session->setFlash(__('The product could not be saved. Please, try again.'), 'default', array(), 'error');
+			}
+		} else {
+			$this->request->data = $this->Product->read(null, $id);
+		}
+
+		$entityAttributes = $this->Product->EntityTemplate->Attribute->find('all', array('conditions' => array('Attribute.entity_template_id' => $this->request->data['Product']['entity_template_id'])));
+		$this->set(compact('entityAttributes'));
+		$entityTemplates = $this->Product->EntityTemplate->find('list');
+		$categories = $this->Product->Category->generateTreeList(null,null,null," - ");
+		$allFeatures = $this->ProductFeature->find('all');
+		$features = $this->ProductFeature->find('all', array(
+			'conditions' => array(
+				'ProductFeature.id' => Set::extract('/ProductFeature/id', $this->request->data),
+			),
+		));
+		$relatedProductTypes = $this->RelatedProductType->find('all', array('order' => 'id'));
+		$this->set(compact('attributes', 'categories', 'entityTemplates', 'features', 'allFeatures', 'relatedProductTypes'));
+	}
+
+	public function admin_attributes($template_id) {
+		$this->autoLayout = false;
+		$this->recursion = 2;
+		$entityAttributes = $this->Product->EntityTemplate->Attribute->find('all', array('conditions' => array('entity_template_id' => $template_id)));
+		$this->set(compact('entityAttributes'));
+	}
+
+	public function admin_get_related_products() {
+		$this->Product->contain('Attachment');
+		$products = $this->Product->find('all', array(
+			'conditions' => array(
+				array('OR' => array(
+					'Product.name LIKE' => '%' . $this->request->data['query'] . '%',
+					'Product.sku LIKE' => '%' . $this->request->data['query'] . '%',
+					'Product.upc LIKE' => '%' . $this->request->data['query'] . '%',
+				)),
+				'Product.id NOT' => $this->request->data['extra']['exclude'],
+			),
+			'fields' => array('Product.name', 'Product.sku', 'Product.upc'),
+			'limit' => $this->request->data['items'],
+		));
+		foreach($products as $key => $product) {
+			$products[$key]['label'] = '#' . $product['Product']['sku'] . ' ' . $product['Product']['name'];
+			$products[$key]['value'] = '#' . $product['Product']['sku'] . ' ' . $product['Product']['name'];
+			$products[$key]['id']    = $product['Product']['id'];
+		}
+		header('Content-Type: application/json');
+		echo json_encode($products);
+		exit;
+		return new CakeResponse(array('body' => json_encode($products)));
+	}
+
+	public function admin_get_related_product() {
+		$this->autoLayout = false;
+		//Configure::write('debug', 0);
+		$this->Product->contain('Attachment');
+		$product = $this->Product->findById($this->request->data['selected']);
+		$this->set(compact('product'));
+	}
+
+	public function admin_delete_related_product($product_id, $related_product_id, $related_product_type_id) {
+		$this->autoLayout = false;
+		$success = $this->RelatedProducts->deleteAll(array(
+			'RelatedProducts.product_id' => $product_id,
+			'RelatedProducts.related_product_id' => $related_product_id,
+			'RelatedProducts.related_product_type_id' => $related_product_type_id,
+		), false);
+		header('Content-Type: application/json');
+		echo json_encode(array('success' => $success));
+		exit;
+		return new CakeResponse(array('body' => json_encode(array('success' => $success))));
+	}
+
+	public function admin_add_video() {
+		$this->Product->Video->create();
+
+		$video = array(
+			'video_key'   => $this->request->data['video_key'],
+			'model'       => $this->request->data['model'],
+			'foreign_key' => $this->request->data['foreign_key'],
+			'type'        => $this->request->data['type'],
+			'duration'    => 0,
+		);
+		switch($video['type']) {
+			case 'Vimeo':
+				$data = json_decode(file_get_contents('http://vimeo.com/api/v2/video/' . $video['video_key'] . '.json'), true);
+				$video['duration']    = $data[0]['duration'];
+				$video['thumbnail']   = $data[0]['thumbnail_large'];
+				$video['title']       = $data[0]['title'];
+				$video['description'] = $data[0]['description'];
+			break;
+			case 'Youtube':
+				$data = json_decode(file_get_contents('http://gdata.youtube.com/feeds/api/videos/' . $video['video_key'] . '?v=2&alt=jsonc'), true);
+				$video['duration']    = $data['data']['duration'];
+				$video['thumbnail']   = $data['data']['thumbnail']['hqDefault'];
+				$video['title']       = $data['data']['title'];
+				$video['description'] = $data['data']['description'];
+			break;
+		}
+
+		$video['sort'] = $this->Product->Video->find('count', array('Video.model' => $video['model'], 'Video.foreign_key' => $video['foreign_key'])) + 1;
+
+		$this->autoLayout = false;
+		if($this->Product->Video->save($video)) {
+			$video['id'] = $this->Product->Video->getInsertID();
+			$id = $this->request->data['counter'];
+			$this->set(compact('video', 'id'));
+		}
+	}
+
+	public function admin_delete_product_video($video_id) {
+		$this->Product->Video->id = $video_id;
+		$success = $this->Product->Video->delete();
+
+		header('Content-Type: application/json');
+		echo json_encode(array('success' => $success));
+		exit;
+		return new CakeResponse(array('body' => json_encode(array('success' => $success))));
+	}
+
+	public function admin_sort_videos() {
+		foreach($this->request->query['videos'] as $sort => $id) {
+			$this->Product->Video->create();
+			$this->Product->Video->id = $id;
+			$this->Product->Video->saveField('sort', ($sort + 1));
+		}
+		$success = true;
+		header('Content-Type: application/json');
+		echo json_encode(array('success' => $success));
+		exit;
+		return new CakeResponse(array('body' => json_encode(array('success' => $success))));
+	}
+
+/**
+ * delete method
+ *
+ * @throws MethodNotAllowedException
+ * @throws NotFoundException
+ * @param string $id
+ * @return void
+ */
+	public function admin_delete($id = null) {
+		if (!$this->request->is('post')) {
+			throw new MethodNotAllowedException();
+		}
+		$this->Product->id = $id;
+		if (!$this->Product->exists()) {
+			throw new NotFoundException(__('Invalid product'));
+		}
+		if ($this->Product->delete()) {
+			$this->Session->setFlash(__('Product deleted'), 'default', array(), 'success');
+			$this->redirect(array('action' => 'index'));
+		}
+		$this->Session->setFlash(__('Product was not deleted'), 'default', array(), 'error');
+		$this->redirect(array('action' => 'index'));
+	}
+}

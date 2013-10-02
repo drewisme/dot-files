@@ -1,0 +1,14 @@
+#!/bin/bash
+for wallpaper in `curl -s http://wallbase.cc/user/collection/69918 | grep -Eo 'http:\/\/wallbase\.cc\/wallpaper\/[0-9]+'`
+do
+    url=`curl -s $wallpaper | grep -A 2 bigwall | grep -Eo 'http:\/\/([^\"]+)\"' | rev | cut -b 2- | rev`
+    hash=`md5 -s $url | awk '{print $4}'`
+    ext=${url##*.}
+    filename="${hash}.${ext}"
+    if [ ! -f ~/Pictures/wallpapers/${filename} ];
+    then
+        echo "Getting ${url}"
+        curl -s $url >> ~/Pictures/wallpapers/${filename}
+        cp ~/Pictures/wallpapers/${filename} ~/Google\ Drive/Images/wallpapers/
+    fi
+done

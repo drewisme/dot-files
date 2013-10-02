@@ -1,0 +1,221 @@
+<?php
+App::uses('AppController', 'Controller');
+/**
+ * CmsPosts Controller
+ *
+ * @property CmsPost $CmsPost
+ */
+class CmsPostsController extends AppController {
+
+	public $uses = array('CmsPost', 'Product', 'RelatedItem', 'CmsRelatedItem');
+
+	public function beforeFilter() {
+		parent::beforeFilter();
+		$this->_initAdminSidebar(array('cms_categories', 'cms_posts', 'cms_pages'));
+	}
+
+	public function display($post_slug = null) {
+		$cmsPost = $this->_get_post($post_slug);
+		$this->CmsPost->CmsCategory->Behaviors->attach('Containable');
+		$cmsCategories = $this->CmsPost->CmsCategory->find('all', array(
+			'contain' => array(),
+		));
+		$needed_posts = 3 - count($cmsPost['RelatedCmsPost']);
+		if($needed_posts > 0) {
+			$posts = $this->CmsPost->find('all', array(
+				'conditions' => array('CmsPost.id !=' => $cmsPost['CmsPost']['id'], 'CmsPost.cms_category_id' => $cmsPost['CmsPost']['cms_category_id']),
+				'limit' => $needed_posts,
+				'contain' => array(),
+			));
+			foreach($posts as $post) {
+				$cmsPost['RelatedCmsPost'][] = $post['CmsPost'];
+			}
+		}
+		$this->set(compact('cmsPost', 'cmsCategories'));
+	}
+
+	public function _get_post($post_slug = null) {
+		$this->CmsPost->Behaviors->attach('Containable');
+		$this->CmsPost->contain(array(
+			'CmsCategory', 
+			'Attachment', 
+			'Meta', 
+			'RelatedProduct' => array('limit' => 5, 'Attachment' => array('limit' => 1)),
+			'RelatedCmsPost' => array('limit' => 5, 'Attachment' => array('limit' => 1)),
+		));
+		$post = $this->CmsPost->findBySlug($post_slug);
+		if (!$post) {
+			throw new NotFoundException(__('Invalid post'));
+		}
+
+		// Meta
+		$title_for_layout = $post['CmsPost']['name'];
+		if(!empty($post['Meta']))
+			$this->setMeta($post['Meta'][0]);
+
+		return $post;
+	}
+
+/**
+ * admin_index method
+ *
+ * @return void
+ */
+	public function admin_index() {
+		$this->CmsPost->recursive = 1;
+		$this->CmsPost->Behaviors->attach('Containable');
+		$this->CmsPost->paginate = array(
+			'contain' => array('CmsCategory', 'Attachment', 'Meta',),
+			'order' => array('CmsPost.publish_date' => 'DESC'),
+		);
+		$this->set('cmsPosts', $this->paginate());
+	}
+
+/**
+ * admin_view method
+ *
+ * @throws NotFoundException
+ * @param string $id
+ * @return void
+ */
+	public function admin_view($id = null) {
+		$this->CmsPost->id = $id;
+		if (!$this->CmsPost->exists()) {
+			throw new NotFoundException(__('Invalid cms post'));
+		}
+		debug($this->CmsPost->read(null, $id));
+		$this->set('cmsPost', $this->CmsPost->read(null, $id));
+	}
+
+/**
+ * admin_add method
+ *
+ * @return void
+ */
+	public function admin_add() {
+		if ($this->request->is('post')) {
+			$this->CmsPost->create();
+			// Fix some constraints before saving
+			$this->CmsPost->hasAndBelongsToMany['RelatedCmsPost']['conditions'] = array();
+			if ($this->CmsPost->saveAll($this->request->data)) {
+				$this->Session->setFlash(__('The cms post has been saved'));
+				$this->redirect(array('action' => 'index'));
+			} else {
+				$this->Session->setFlash(__('The cms post could not be saved. Please, try again.'));
+			}
+		}
+		$users = $this->CmsPost->User->find('list');
+		$cmsCategories = $this->CmsPost->CmsCategory->find('list');
+		$this->set(compact('users', 'cmsCategories'));
+	}
+
+/**
+ * admin_edit method
+ *
+ * @throws NotFoundException
+ * @param string $id
+ * @return void
+ */
+	public function admin_edit($id = null) {
+		$this->CmsPost->id = $id;
+		if (!$this->CmsPost->exists()) {
+			throw new NotFoundException(__('Invalid cms post'));
+		}
+		if ($this->request->is('post') || $this->request->is('put')) {
+			// Fix some constraints before saving
+			$this->CmsPost->hasAndBelongsToMany['RelatedCmsPost']['conditions'] = array();
+			if ($this->CmsPost->saveAll($this->request->data)) {
+				$this->Session->setFlash(__('The cms post has been saved'));
+				$this->redirect(array('action' => 'index'));
+			} else {
+				$this->Session->setFlash(__('The cms post could not be saved. Please, try again.'));
+			}
+		} else {
+			$this->CmsPost->Behaviors->attach('Containable');
+			$this->request->data = $this->CmsPost->find('first', array(
+				'conditions' => array('CmsPost.id' => $id),
+				'contain' => array(
+					'RelatedProduct' => array('Attachment' => array('limit' => 1)),
+					'RelatedCmsPost' => array('Attachment' => array('limit' => 1)),
+					'CmsCategory',
+					'User',
+					'Attachment',
+					'Meta',
+				),
+			));
+		}
+		$users = $this->CmsPost->User->find('list');
+		$cmsCategories = $this->CmsPost->CmsCategory->find('list');
+		$this->set(compact('users', 'cmsCategories'));
+	}
+
+/**
+ * admin_delete method
+ *
+ * @throws MethodNotAllowedException
+ * @throws NotFoundException
+ * @param string $id
+ * @return void
+ */
+	public function admin_delete($id = null) {
+		if (!$this->request->is('post')) {
+			throw new MethodNotAllowedException();
+		}
+		$this->CmsPost->id = $id;
+		if (!$this->CmsPost->exists()) {
+			throw new NotFoundException(__('Invalid cms post'));
+		}
+		if ($this->CmsPost->delete()) {
+			$this->Session->setFlash(__('Cms post deleted'));
+			$this->redirect(array('action' => 'index'));
+		}
+		$this->Session->setFlash(__('Cms post was not deleted'));
+		$this->redirect(array('action' => 'index'));
+	}
+
+	public function admin_get_related_items($cms_model, $model) {
+		$results = $this->{$model}->find('all', array(
+			'conditions' => array(
+				$model . '.id NOT' => $this->request->data['extra']['exclude'],
+				$model . '.name LIKE' => '%' . $this->request->data['query'] . '%',
+			),
+			'contain' => array(),
+			'fields' => array('id', 'name'),
+			'limit' => $this->request->data['items'],
+		));
+		foreach($results as $id => $result) {
+			$results[$id]['id'] = $results[$id][$model]['id'];
+			$results[$id]['label'] = $results[$id][$model]['name'];
+			$results[$id]['value'] = $results[$id][$model]['name'];
+		}
+
+		return new CakeResponse(array('body' => json_encode($results), 'type' => 'json'));
+	}
+
+	public function admin_get_related_item($cms_model, $model) {
+		$this->autoLayout = false;
+		$related_item = $this->{$model}->findById($this->request->data['selected']);
+		if($related_item) {
+			$related_item = array_merge($related_item, $related_item[$model]);
+		}
+		$item = $this->CmsPost->findById($this->request->data['extra']['related_item']);
+		if($item) {
+			$item = array_merge($item, $item[$cms_model]);
+		}
+		$this->set(compact('related_item', 'item'));
+		$this->set('extra', $this->request->data['extra']);
+		$this->set('counter', $this->request->data['counter']);
+	}
+
+	public function admin_delete_related_item($cms_model, $model, $cms_id, $item_id) {
+		$success = $this->CmsRelatedItem->deleteAll(array(
+			'CmsRelatedItem.cms_model' => $cms_model,
+			'CmsRelatedItem.cms_foreignKey' => $cms_id,
+			'CmsRelatedItem.model' => $model,
+			'CmsRelatedItem.foreignKey' => $item_id,
+		), false);
+
+
+		return new CakeResponse(array('body' => json_encode(array('success' => $success)), 'type' => 'json'));
+	}
+}

@@ -1,0 +1,38 @@
+<?php if(count($mantles) > 0) : ?>
+<section class="hero-wrapper hidden-phone">
+	<div class="bg-container" style="background-image: url(<?php echo isset($mantles[0]['Attachment'][1]['path']) ? $this->Media->url("original/{$mantles[0]['Attachment'][1]['path']}") : '' ?>);"></div>
+	<div class="container">
+		<ul class="unstyled heros">
+			<?php foreach ($mantles as $mantle) : ?>
+				<li data-bg="<?php echo isset($mantle['Attachment'][1]['path']) ? $this->Media->url("original/{$mantle['Attachment'][1]['path']}") : '' ?>">
+					<?php if(!empty($mantle['url'])) : ?>
+						<a href="<?php echo $mantle['url'] ?>" target="<?php echo $mantle['url_target'] ?>">
+							<?php echo $this->Media->embed($this->Media->file("original/{$mantle['Attachment'][0]['path']}"), array('restrict' => array('image'))); ?>
+						</a>
+					<?php else : ?>
+						<?php echo $this->Media->embed($this->Media->file("original/{$mantle['Attachment'][0]['path']}"), array('restrict' => array('image'))); ?>
+					<?php endif ?>
+					<div class="info">
+						<?php if(!empty($mantle['Video'])) : ?>
+							<a class="fancybox-media video-link" href="<?php echo $mantle['Video'][0]['url'] ?>">
+								<div class="video-thumbnail" style="background-image: url('<?php echo $mantle['Video'][0]['thumbnail'] ?>');"></div>
+								<div class="video-overlay"></div>
+							</a>
+						<?php endif ?>
+						<?php if(!empty($mantle['Product'])) : ?>
+							<div class="price-holder">
+								<?php echo $this->Sidecart->priceFormat($mantle['Product'], '<span class="price">:price <span class="regular-price :sale_status">:original_price</span></span>'); ?>
+								<a class="btn-buynow" href="<?php echo $this->Sidecart->productUrl($mantle['Product']) ?>">BUY NOW</a>
+							</div>
+						<?php endif ?>
+					</div>
+				</li>
+			<?php endforeach ?>
+			<!-- <li data-bg="/theme/<?php echo $this->theme; ?>/img/fpo/bg-hero-2.jpg"><a href="#"><img src="/theme/<?php echo $this->theme; ?>/img/fpo/hero-2.png" width="1170" height="410" border="0"/></a></li> -->
+		</ul>
+		<div class="pagination-circles"></div>
+	</div>
+	<a class="btn-prev" href="#"></a>
+	<a class="btn-next" href="#"></a>
+</section>
+<?php endif ?>

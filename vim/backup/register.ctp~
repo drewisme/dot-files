@@ -1,0 +1,79 @@
+<?php
+	$this->Crumb->addCrumb('Home', '/');
+	$this->Crumb->addCrumb('My Account', '/account');
+	$this->Crumb->addCrumb('Register', '/register');
+?>
+<section class="background-white-1 shopping-cart-section hero-top">
+	<div class="container">
+		<h1 class="row heading heading-simple">
+			<div class="span12">
+				<div class="title pull-left">
+					<span class="subtitle">HPI Racing</span>
+					<span>My Account</span>
+					<div class="slash"></div>
+				</div>
+				<div class="border-holder">
+					<div class="border"></div>
+				</div>
+			</div>
+		</h1>
+		<div class="row">
+			<div class="span5 shopping-cart-container">
+				<h3>Create Account</h3>
+				<div class="row">
+					<div class="span5">
+						<?php 
+							echo $this->TwitterBootstrap->flashes(array("auth" => true));
+							echo $this->TwitterBootstrap->create('Customer');
+						?>
+						<div class="well">
+							<?php 
+								echo $this->TwitterBootstrap->input('first_name', array('class' => 'span3'));
+								echo $this->TwitterBootstrap->input('last_name', array('class' => 'span3'));
+
+								echo $this->TwitterBootstrap->input('email', array('class' => 'span3'));
+								echo $this->TwitterBootstrap->input('new_password', array('type' => 'password', 'value' => '', 'class' => 'span3'));
+								echo $this->TwitterBootstrap->input('repeat_password', array('type' => 'password', 'value' => '', 'class' => 'span3'));
+								echo $this->TwitterBootstrap->hidden('accept_terms', array('value' => 0, 'class' => 'span3'));
+								echo $this->Form->input('accept_terms', array('type' => 'checkbox', 'value' => 1, 'hiddenField' => 0, 'label' => 'I accept and understand the ' . $this->html->link('Terms & Conditions', array('controller' => 'legal', 'action' => 'terms'))));
+							?>
+						</div>
+						<?php 
+							echo $this->TwitterBootstrap->submit('Create Account', array('class' => 'btn-buynow'));
+							echo $this->TwitterBootstrap->end(); 
+						?>
+					</div>
+				</div>
+			</div>
+			<div class="span5">
+				<h3>Member Benefits</h3>
+				<ul class="unstyled">
+					<li>
+						<strong>Benefit 1</strong>
+						<p>Erectos undas cuncta illis fulgura caligine cognati. Piscibus acervo retinebat mentisque utque subdita. Illis distinxit sponte sole nullo inter inclusum. Di aeris cum aera rectumque pro feras proximus fulgura numero.</p>
+					</li>
+					<li>
+						<strong>Benefit 2</strong>
+						<p>Ora fabricator. Dominari terra gentes cepit vultus verba limitibus inposuit inter. Nuper nisi recepta circumfuso perpetuum nabataeaque terrae terram subdita. Dissaepserat tum ventos natura terris exemit fixo zephyro lanient aberant.</p>
+					</li>
+					<li>
+						<strong>Benefit 3</strong>
+						<p>Sidera pugnabant. Traxit mare mutastis ne caelumque. Ille carmen. Circumfuso bene sublime sata. Melior minantia ventis auroram cum inclusum evolvit vultus. Pluvialibus pondere nix aetas pluviaque homo membra sui addidit.</p>
+					</li>
+				</ul>
+			</div>
+			<div class="span2 general-info-help-area">
+				<div class="black-bg">
+					<h2>Need Help</h2>
+					<p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Maecenas faucibus mollis interdum. Duis mollis,</p> 
+					<p><a class="orange" href="#">Email Us</a></p>
+
+					<h2>FAQ’s</h2>
+					<p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Maecenas faucibus mollis interdum. Duis mollis,</p> 
+					<p><a class="orange" href="#">Click Here</a></p>
+					
+				</div>
+			</div>
+		</div>
+	</div>
+</section>

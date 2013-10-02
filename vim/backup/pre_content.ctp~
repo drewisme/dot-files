@@ -1,0 +1,73 @@
+<section class="background-white-1">
+			<div class="container">
+				<h1 class="row heading">
+					<div class="span12">
+						<div class="title pull-left">
+							<span class="subtitle"><?php echo __(Configure::read('Setting.theme'))?></span>
+							<span><?php echo __('my account')?></span>
+							<div class="slash"></div>
+						</div>
+						<div class="border-holder" style="margin-left: 201px; ">
+							<div class="border"></div>
+						</div>
+					</div>
+				</h1>
+				<div class="row">
+					<div class="span3 my-account-nav">
+						<?php
+						$links = array(
+							array(
+								'label' => 'General Info',
+								'controller' => 'customers',
+								'action' => 'index',
+							),
+							array(
+								'label' => 'Change Password',
+								'controller' => 'customers',
+								'action' => 'password',
+							),
+							array(
+								'label' => 'Newsletter',
+								'controller' => 'customers',
+								'action' => 'newsletter',
+							),
+							array(
+								'label' => 'Address Book',
+								'controller' => 'customers',
+								'action' => 'addresses',
+								'matches' => array('edit_address'),
+							),
+							array(
+								'label' => 'Order History',
+								'controller' => 'customers',
+								'action' => 'order_history',
+							),
+							array(
+								'label' => 'Shopping Cart',
+								'controller' => 'carts',
+								'action' => 'index',
+							),
+							array(
+								'label' => 'Wish List',
+								'controller' => 'carts',
+								'action' => 'wishlist',
+							),
+							array(
+								'label' => 'Sign Out',
+								'controller' => 'customers',
+								'action' => 'logout',
+							),
+						);
+						foreach($links as $link) {
+							$link['matches'] = array_key_exists('matches', $link) && is_array($link['matches']) ? $link['matches'] : array();
+							echo '<p>' . $this->html->link(__($link['label']), array(
+								'controller' => $link['controller'],
+								'action' => $link['action'],
+							), array(
+								'class' => ($this->request->params['controller'] === $link['controller'] && ($this->request->params['action'] == $link['action'] || in_array($this->request->params['action'], $link['matches']))) ? 'active' : '',
+							)) . "</p>\n";
+						} 
+						?>
+					</div>
+					<div class="span6 general-info-container">
+						<?php echo $this->TwitterBootstrap->flashes(array("auth" => true)); ?>

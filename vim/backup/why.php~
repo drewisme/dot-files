@@ -1,0 +1,92 @@
+		<?php 
+
+			$meta['title'] = '';
+			$meta['keywords'] = '';
+			$meta['description'] = '';
+			
+			include APP_PATH . 'inc/header.php';
+		
+		?>
+			<!-- block-in -->
+			<div class="block-in">
+				<div class="holder">
+					<div class="container">
+						<div class="decor"></div>
+						<!-- section -->
+						<div class="section">
+							<!-- content -->
+							<div class="content">
+								<!-- head-line -->
+								<h2 class="head-line large">
+									<span class="row"><mark>GET HELP</mark></span> 
+									<span class="holder indent">
+										<span class="row"><mark>TEACHER RESOURCES</mark></span>
+									</span>
+								</h2>
+								<!-- simple-area -->
+								<div class="simple-area">
+									<section class="text">
+										<header><h2>WHY ARE SCHOOLS IMPORTANT</h2></header>
+                                        <div class="columns-box">
+                                            <ul class="list small" style="padding-right: 40px; padding-left: 30px; width: 575px; padding-top: 15px;">
+                                                <li>All members of the school community, faculty, staff, peers, and parents, have significant roles in preventing dating violence and promoting healthy relationship behaviors.</li>
+                                                <li>Schools are best-positioned to identify the problem of teen dating abuse among students</li>
+                                                <li>Teachers can partner with Laura&rsquo;s House to reduce sexual harassment, teen abuse, and bullying behavior.</li>
+                                                <li>Schools have a duty to provide protection for their students,</li>
+                                                <li>including safeguarding them from physical harm inflicted by other students.</li>
+                                                <li>For example, under the California Constitution, students and staff of every school in California have the &ldquo;inalienable right to attend campuses which are safe, secure, and peaceful.&rdquo;8Cal. Const. art. I, &sect; 28(c).</li>
+                                                <li>Schools can provide victims with resources by posting our 24-Hour Toll Free Crisis Hotline number (866) 498-1511 in the classroom</li>
+                                                <li>Teachers can be taught to recognize abusive behavior as early as middle school</li>
+                                            </ul>
+                                        </div>
+									</section>
+								</div>
+                                <div class="simple-area" style="background: none;">
+                                    <article class="area" style="background: none;">
+                                        <figure class="image-area">
+                                            <img src="/lhteendev/images/salina-stone.png" alt="image description" width="308" height="364" >
+                                        </figure>
+                                        <div class="text">
+                                            <h2>In Her Own Words</h2><br />
+                                            <p><em>I got to the edge of the school grounds, and he came walking
+toward me . . . . I kept telling him to leave me alone, looking
+down. When I didn't react to him, he grabbed me by my wrists
+and dragged me to his car. By this time, everyone was walking
+by on their way to school. Buses and teachers were driving up.
+My last hope was to yell for help . . . . I started calling, "Help
+me!" He started slapping me. I kept screaming for help. He
+grabbed from behind and put his hands over my nose and
+mouth. I couldn't breathe . . . . The last thing I saw was about
+twenty or twenty-five of my classmates standing within a few
+yards of me, just watching.</em></p>
+<p>—Salina Stone, high school senior</p>
+<p style="font-size: 10px;">Salina Stone, They Said I Was "Young and Immature," in Dating Violence: Young
+Women in Danger 28, 31 (Barrie Levy ed., 1991</p>
+                                        </div>
+                                    </article>
+								</div>
+                                <div class="simple-area" style="background: none;">
+									<section class="text">
+										<header><h2>TEEN DATING ABUSE DON'TS:</h2></header>
+                                        <div class="columns-box">
+                                            <ul class="list small" style="padding-right: 40px; padding-left: 30px; width: 575px; padding-top: 15px;">
+                                            	<li>Assume Teen Dating Abuse does not happen in your school.</li>
+                                                <li>Ignore or tolerate bullying or controlling behavior.</li>
+                                                <li>Assume the victim is at fault.</li>
+                                                <li>Assume that middle school and high school students are too young to learn about Teen Dating Abuse.</li>
+                                                <li>Assume teen Dating Abuse prevention programs encourage or support dating, intimacy or sexual activity.</li>
+                                                <li>Assume the abuse is warranted.</li>
+                                                <li>Assume unhealthy relationships are a &ldquo;normal&rdquo; part of teen dating.</li>
+                                                <li>Ignore verbal abuse as it is a sign of physical violence.&nbsp;</li>
+                                            </ul>
+                                        </div>
+									</section>
+									<p>For additional resources, please visit <a href="#">(link to other resource page)</a> </p>
+                                </div>
+							</div>
+                            <!-- aside -->
+							<?php include APP_PATH . 'inc/gethelp-side.php' ?>
+						</div>
+					</div>
+				</div>
+			</div>

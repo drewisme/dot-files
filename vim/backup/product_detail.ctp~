@@ -1,0 +1,94 @@
+<div class="container">
+	<div class="row">
+		<div class="span7">
+			<h1 class="details-heading">
+				<span class="subtitle">#<?php echo $product['Product']['sku'] ?></span>
+				<span class="details-title"><?php echo $this->Sidecart->breakTitle($product['Product']['name'], 40) ?></span>
+			</h1>
+			<div class="details-gallery">
+				<a href="javascript:void(0);" class="gallery-open"><?php echo $this->Media->embed($this->Media->file("l/{$product['Attachment'][0]['path']}"), array('restrict' => array('image'), 'class' => 'product-image')) ?></a>
+				<div class="gallery-divider">
+					<a href="javascript:void(0);" class="gallery-open"><img src="/theme/HPI/img/plus-button.png" /></a>
+				</div>
+				<div class="thumbnail-container product-thumbnails">
+				<?php foreach($product['Attachment'] as $image) : ?>
+					<a href="<?php echo $this->Media->url("l/{$image['path']}") ?>" data-large="<?php echo $this->Media->url("xl/{$image['path']}") ?>" rel="product-images"><?php echo $this->Media->embed($this->Media->file("s/{$image['path']}"), array('restrict' => array('image'))) ?></a>
+				<?php endforeach ?>
+				</div>
+			</div>
+		</div>
+		<div class="span5">
+			<div class="products-details">
+				<!-- AddThis Button BEGIN -->
+				<div class="heading addthis_toolbox addthis_default_style ">
+					<a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+					<a class="addthis_button_tweet"></a>
+				</div>
+				<!-- AddThis Button END -->
+				<?php if(!empty($product['Product']['description'])) : ?>
+					<p><?php echo $product['Product']['description'] ?></p>
+					<p><a href="#" class="primary-link"><strong>Lean More</strong></a></p>
+					<hr />
+				<?php endif ?>
+				<div class="row">
+					<div class="span2">
+						<div class="details-specs">
+							<?php if(!empty($specs)): ?>
+							<h3><strong>Specifications</strong></h3>
+								<?php for($i=0; $i<min(4, count($specs)); $i++) : ?>
+								<p><strong><?php echo $specs[$i]['Attribute']['name'] ?>:</strong> <?php echo $specs[$i]['AttributesValue']['value']; ?></p>
+								<?php endfor; ?>
+							<p><a href="#" class="trigger-tab" data-toggle="#product-specs">View All</a></p>
+							<?php endif; ?>
+							<!-- <p>
+								&#9733;&#9733;&#9733;&#9733;&#9733; <a href="#" class="primary-link trigger-tab" data-toggle="#product-reviews"><strong>5 Reviews</strong></a>
+							</p> -->
+							<hr />
+							<!-- <p>
+								&#9733;&#9733;&#9733;&#9733;&#9733; <a href="#" class="primary-link"><strong>5 Reviews</strong></a>
+							</p> -->
+							<?php echo $this->Html->link('Add to Wishlist', array('controller' => 'carts', 'action' => 'add_wishlist', $product['Product']['id']), array('class' => 'btn btn-mini'))?>
+							<a class="btn btn-mini" type="button">Share</a>
+						</div>
+					</div>
+					<div class="span3">
+							<?php echo $this->TwitterBootstrap->create('Cart', array('controller' => 'carts', 'action' => 'index', 'class' => 'buy-now')); ?>
+							<div class="buy-options quantity-<?php echo $product['Product']['quantity']; ?>">
+								<div class="container">
+									<?php echo $this->TwitterBootstrap->hidden('Cart.0.product_id', array('value' => $product['Product']['id']))?>
+									<?php echo $this->TwitterBootstrap->hidden('Cart.0.id', array('value' => 0))?>
+									<?=$this->Sidecart->priceFormat($product['Product'], '
+										<img class="sale-triangle :sale_status" src="/theme/HPI/img/sale-triangle.png"/>
+										<p class="item-price">
+											<strong>:price</strong>
+										</p>
+										<p class="regular-price :sale_status">:original_price</p>
+									')?>
+									<?php 
+									$options = array(
+										1 => 'Quantity: 1',
+										2 => 'Quantity: 2',
+										3 => 'Quantity: 3',
+										4 => 'Quantity: 4',
+										5 => 'Quantity: 5',
+									);
+									$options = array_slice($options, 0, min(count($options), $product['Product']['quantity']), true);
+									echo $this->TwitterBootstrap->input('Cart.0.quantity', array('options' => $options, 'value' => '1'));?>
+									<div class="buy-box">
+										<?php echo $this->TwitterBootstrap->submit('Buy Now', array('class' => 'btn-buynow')); ?>
+									</div>
+									<div class="buy-box quantity-0 box-grey">
+										<?php echo $this->Html->link('Out of Stock', array('controller' => 'carts', 'action' => 'backorder', $product['Product']['id']), array('class' => 'btn-grey')); ?>
+									</div>
+									<p class="primary-link">
+										<a href="#" class="primary-link"><strong>Find a Retailer</strong></a>
+									</p>
+								</div>
+							</div>
+							<?php echo $this->TwitterBootstrap->end();?>
+						</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

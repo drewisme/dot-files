@@ -1,0 +1,147 @@
+<section class="background-black shopping-cart-section hero-top">
+	<div class="container">
+		<div class="row">
+			<div class="span9 shopping-cart-container">
+				<div class="row">
+					<ol class="span9 cart-checkout-steps">
+						<li class="complete">
+							<?php echo $this->Html->link('Shipping', array('controller' => 'carts', 'action' => 'checkout')); ?>
+						</li>
+						<li class="complete">
+							<?php echo $this->Html->link('Billing', array('controller' => 'carts', 'action' => 'billing')); ?>
+						</li>
+						<li class="active">Review Order &amp; Submit</li>
+					</ol>
+				</div>
+				<hr class="shopping-cart-hr">
+				<div class="row shopping-cart-item">
+					<div class="span9">
+						<div class="row">
+							<div class="span2">
+								<div class="address-review-text-area">
+									<h5>Shipping Address</h5>
+									<?php echo h($this->Session->read('ShippingAddress.first_name')); ?>
+									<?php echo h($this->Session->read('ShippingAddress.last_name')); ?><br />
+									<?php echo h($this->Session->read('ShippingAddress.address_line1')); ?><br />
+									<?php echo h($this->Session->read('ShippingAddress.address_line2')); ?><br />
+									<?php echo h($this->Session->read('ShippingAddress.city')); ?>
+									<?php echo h($this->Session->read('ShippingAddress.state')); ?><br />
+									<?php echo $this->Html->link('Edit', array('controller' => 'carts', 'action' => 'checkout')); ?>
+								</div>
+							</div>
+							<div class="span2">
+								<div class="address-review-text-area">
+									<h5>Shipping Method</h5>
+									Standard Shipping<br />
+									$5.99 (3-7 Business days)<br />
+									<?php echo $this->Html->link('Edit', array('controller' => 'carts', 'action' => 'checkout')); ?>
+								</div>
+							</div>
+							<div class="span2">
+								<div class="address-review-text-area">
+									<h5>Billing Address</h5>
+									<?php echo h($this->Session->read('BillingAddress.first_name')); ?>
+									<?php echo h($this->Session->read('BillingAddress.last_name')); ?><br />
+									<?php echo h($this->Session->read('BillingAddress.address_line1')); ?><br />
+									<?php echo h($this->Session->read('BillingAddress.address_line2')); ?><br />
+									<?php echo h($this->Session->read('BillingAddress.city')); ?>
+									<?php echo h($this->Session->read('BillingAddress.state')); ?><br />
+									<?php echo $this->Html->link('Edit', array('controller' => 'carts', 'action' => 'billing')); ?>
+								</div>
+							</div>
+							<div class="span2">
+								<div class="address-review-text-area">
+									<h5>Payment</h5>
+									<?php echo h($this->Session->read('BillingAddress.first_name')); ?>
+									<?php echo h($this->Session->read('BillingAddress.last_name')); ?><br />
+									Visa<br />
+									************1881<br />
+									Exp: 10/2012<br />
+									<?php echo $this->Html->link('Edit', array('controller' => 'carts', 'action' => 'billing')); ?>
+								</div>
+							</div>
+						</div>
+						<?php foreach($carts as $key => $cart): ?>
+						<div class="row">
+							<!-- start product -->
+							<div class="span3 shopping-cart-item-image">
+								<a href="<?=$this->Sidecart->productUrl($cart['Product'])?>">
+									<?php 
+									echo $this->Media->embed($this->Media->file("m/{$cart['Product']['Attachment'][0]['path']}"), array(
+										'restrict' => array('image'), 
+										'width' => 270,
+										'class' => 'product-image',
+									));
+									echo $this->Sidecart->priceFormat($cart['Product'], '
+                                                                            <img src="/theme/' . $this->theme . '/img/sale-triangle.png" class="sale-triangle :sale_status" />
+									'); 
+									?>
+								</a>
+							</div>
+							<div class="span4 shopping-cart-item-description">
+								<?php echo $this->Sidecart->priceFormat($cart['Product'], '
+									<p class="item-price :sale_status">:price</p>
+									<p class="regular-price :sale_status">:original_price</p>
+								');?>
+								<p class="shopping-cart-item-name"><?=$cart['Product']['name']?></p>
+								<p class="shopping-cart-item-options">Black</p>
+							</div>
+							<div class="span1 shopping-cart-quantity">
+								<strong>Quantity <?=$this->Number->format($cart['Cart']['quantity'])?></strong> 
+								<?php 
+								// echo $this->TwitterBootstrap->input("Cart.$key.quantity", array(
+								// 	'value' => $cart['Cart']['quantity'], 
+								// 	'class' => 
+								// 	'input-mini', 'min' => 0, 'disabled' => 'disabled',
+								// )); 
+								?>
+							</div>
+							<!-- end product -->
+						</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+				<?php echo $this->TwitterBootstrap->end(); ?>
+			</div>
+			<div class="span3">
+				<div class="shopping-cart-total-box">
+					<table>
+						<thead>
+							<tr>
+								<td colspan="2"><strong>Total</strong></td>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Subtotal</td>
+								<td><?php echo $this->Number->currency($total['total_price']);?></td>
+							</tr>
+							<tr>
+								<td>Shipping</td>
+								<td><?php echo $this->Number->currency(7.99);?></td>
+							</tr>
+							<tr>
+								<td>Tax</td>
+								<td><?php echo $this->Number->currency(($total['total_price'] + 7.99) * 0.0775);?></td>
+							</tr>
+							<tr>
+								<td><strong class="order-total">Order Total</strong></td>
+								<td><strong class="order-total"><?php echo $this->Number->currency(($total['total_price'] + 7.99) * 1.0775);?></strong></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="shopping-cart-help-box">
+					<strong>Need Help</strong>
+					<p>
+						Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Maecenas faucibus mollis interdum. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Cras mattis consectetur purus sit amet fermentum.
+					</p><a href="#">Learn More</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+
+
+

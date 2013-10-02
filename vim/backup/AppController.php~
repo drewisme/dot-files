@@ -1,0 +1,290 @@
+<?php
+/**
+ * Application level Controller
+ *
+ * This file is application-wide controller file. You can put all
+ * application-wide controller-related methods here.
+ *
+ * PHP 5
+ *
+ * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ *
+ * Licensed under The MIT License
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @link          http://cakephp.org CakePHP(tm) Project
+ * @package       app.Controller
+ * @since         CakePHP(tm) v 0.2.9
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
+ */
+
+App::uses('Controller', 'Controller');
+/**
+ * Application Controller
+ *
+ * Add your application-wide methods in the class below, your controllers
+ * will inherit them.
+ *
+ * @package       app.Controller
+ * @link http://book.cakephp.org/2.0/en/controllers.html#the-app-controller
+ */
+class AppController extends Controller {
+/**
+ * $helpers
+ * @var array
+ */
+	public $helpers = array(
+		'Html', 'Form', 'Text', 'Crumb', 'Number',
+		'TwitterBootstrap.TwitterBootstrap',
+		'Chosen.Chosen',
+		'Media.Media',
+		'Sidecart',
+		'AutoAsset',
+	);
+
+	public $components = array(
+		'Session',
+		'Auth' => array(
+			'loginRedirect' => array('controller' => 'pages', 'action' => 'display', 'home'),
+			'logoutRedirect' => array('controller' => 'pages', 'action' => 'display', 'home'),
+			'loginAction' => array('controller' => 'customers', 'action' => 'login'),
+			'logoutAction' => array('controller' => 'customers', 'action' => 'logout'),
+			'authenticate' => array(
+				'Form' => array(
+					'userModel' => 'Customer',
+					'scope' => array('Customer.active' => 1),
+					'fields' => array('username' => 'email'),
+				),
+			),
+			'autoRedirect' => true,
+		),
+		'Cookie',
+		'DebugKit.Toolbar'
+	);
+
+	public $uses = array('Customer', 'Cart', 'CustomerAction');
+/**
+ * beforeFilter
+ * @return void
+ */
+	public function beforeFilter() {
+		// Check remember me logins
+		$this->checkRememberMeLogin();
+
+		// Auth
+		$this->_initAuth();
+
+		// Set Theme
+		$this->initTheme();
+
+		// Set Navigation
+		$this->initNav();
+
+		// Basic auth allowed
+		$this->Auth->authorize = 'Controller';
+		$this->Auth->allow();
+	}
+
+	public function isAuthorized() {
+		return true;
+	}
+
+/**
+ * Setup authentication for admins/customers
+ * @return void
+ */
+	public function _initAuth() {
+		// Change layout for admin
+		$prefix = !empty($this->request->params['prefix']) ? $this->request->params['prefix'] : '';
+		if ($prefix == 'admin') {
+			$this->layout = 'admin';
+		}
+	}
+
+/**
+ * Get Theme for app
+ * @return void
+ */
+	public function initTheme() {
+		// Set HPI default for now
+		$this->theme = 'HPI';
+	}
+
+	public function initNav() {
+		// Set just product categories for now
+		$this->loadModel('Category');
+		$this->Category->Behaviors->attach('Containable');
+		$categories = $this->Category->find('all', array(
+			'contain' => array(
+				'ChildCategory' => array(
+					'order' => 'ChildCategory.sort ASC',
+				),
+				'Attachment' => array(
+					'limit' => 1,
+				),
+			),
+			'conditions' => array(
+				'Category.parent_id' => null,
+			),
+			'order' => 'Category.sort ASC',
+			'recursive' => 2,
+		));
+		$this->set('allProductsInStock', $this->in_stock());
+		$this->set(compact('categories'));
+	}
+
+/**
+ * Create sidebar links array for admin
+ * @param  array  $controllers Controller names to populate default links
+ * @return void
+ */
+	public function _initAdminSidebar($controllers = array()) {
+		$name_overrides = array(
+			'cms_pages'        => 'pages',
+			'cms_posts'        => 'blog_posts',
+			'cms_categories'   => 'blog_categories',
+			'entity_templates' => 'product_templates',
+		);
+
+		if (!empty($controllers)) {
+			$sidebar_links = array();
+			foreach ($controllers as $controller) {
+				$name = array_key_exists($controller, $name_overrides) ? $name_overrides[$controller] : $controller;
+				$sidebar_links[$controller]['index'] = __('Manage ' . Inflector::humanize($name));
+				if(!in_array($controller, array('settings'))) {
+					$sidebar_links[$controller]['add'] = __('Add ' . Inflector::singularize(Inflector::humanize($name)));
+				}
+			}
+			$this->set(compact('sidebar_links', 'name_overrides'));
+		}
+	}
+
+	public function setMeta($meta = array()) {
+		$metas = array('title' => '', 'keywords' => '', 'description' => '');
+		foreach($metas as $type => $content){
+			if(!empty($meta[$type])){
+				$metas[$type] = $meta[$type];
+			}
+		}
+		$this->set(compact('metas'));
+	}
+
+/**
+ * Return json slug $name. Looks at current model for existing slugs.
+ * @param  string $name Text to convert to slug
+ * @return json
+ */
+	public function admin_slug($name = null) {
+		$data = array();
+		$model = Inflector::singularize($this->name);
+		if($name){
+			$slug = Inflector::slug(strtolower($name), '-');
+
+			// Handle existing slugs
+			$i = 1;
+			$new_slug = $slug;
+			while($this->{$model}->hasAny(array($model . '.slug' => $new_slug)))
+				$new_slug = $slug . '-' . $i;
+
+			$data['slug'] = $new_slug;
+		}
+		return new CakeResponse(array('body' => json_encode($data)));
+	}
+
+	public function in_stock($options = array()) {
+		$this->loadModel('Product');
+		// We need to find products with and without quantity
+		$options['fields'][] = 'IF(Product.quantity > 0, 1, 0) AS `in_stock`';
+		// Get a count for each
+		$options['fields'][] = 'COUNT(*) AS `count`';
+		// Of only active products
+		$options['conditions']['active'] = true;
+		$options['contain'] = array_key_exists('contain', $options) ? $option['contain'] : array();
+		// Group by the stock amount
+		$options['group'][] = 'in_stock';
+		// Make the data easier to use
+		$stock = Set::combine($this->Product->find('all', $options), '{n}.0.in_stock', '{n}.0.count');
+		// No products in stock
+		if(!array_key_exists(1, $stock)) {
+			return 0.0;
+		}
+		// No products out of stock
+		if(!array_key_exists(0, $stock)) {
+			return 1.0;
+		}
+		return $stock[1] / ($stock[0] + $stock[1]);
+	}
+
+	protected function checkRememberMeLogin() {
+		$remember = $this->Cookie->read('remember_me');
+		if(!$this->Auth->loggedIn() && $remember) {
+			$user = $this->Customer->find('first', array(
+				'conditions' => array(
+					'Customer.email' => $remember['email'],
+					'Customer.password' => $remember['password'],
+				),
+			));
+
+			if($user && !$this->Auth->login($user)) {
+				$this->Cookie->delete('remember_me');
+				$this->Auth->logout();
+			}
+		}
+	}
+
+	protected function setRememberMeLogin($data = null) {
+		if(is_null($data)) {
+			$data = $this->Auth->user();
+			$data['password'] = $this->Customer->field('password', array('Customer.id' => $data['id']));
+		}
+		if(!array_key_exists('password', $data)) {
+			$data['password'] = $this->Customer->field('password', array('Customer.id' => $data['email']));
+		}
+		$remember = array(
+			'email' => $data['email'],
+			'password' => $data['password'],
+		);
+		$this->Cookie->write('remember_me', $remember, true, '4 weeks');
+	}
+
+	public function removeRememberMeLogin() {
+		$this->Cookie->delete('remember_me');
+	}
+
+	/**
+	 * Record an action taken by the user
+	 * @param  int      $foreign_key     The ID of the field that the action was applied to
+	 * @param  string   $action_taken    The actual action that the user took. Example: View, Register, Checkout, Search, Purchase, Return, Login.
+	 * @param  string   $model           The Model that the action was taken with
+	 * @param  array    $extra           Any extra information. This is not indexable, it is just for serialized array data.
+	 * @return boolean                   The Success or failure of the save operation for the data
+	 */
+	public function recordAction($foreign_key, $action_taken = null, $model = null, $extra = array()) {
+		if(is_null($action_taken)) {
+			$action_taken = 'View';
+		}
+		$action_taken = Inflector::singularize($action_taken);
+
+		if(is_null($model)) {
+			$model = $this->request->params['controller'];
+		}
+		$model = Inflector::classify($model);
+
+		if(is_array($extra) && empty($extra)) {
+			$extra = null;
+		}
+
+		$insert = compact('action_taken', 'model', 'foreign_key', 'extra');
+
+		if(CakeSession::read('Auth.User.id')) {
+			$insert['customer_id'] = CakeSession::read('Auth.User.id');
+		} else {
+			$insert['session_id'] = CakeSession::id();
+		}
+
+		$this->CustomerAction->create($insert);
+		return $this->CustomerAction->save();
+	}
+}

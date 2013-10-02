@@ -1,0 +1,4 @@
+#!/usr/bin/python
+f = open('file.txt', 'w')
+f.write('hi')
+f.close()

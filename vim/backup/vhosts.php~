@@ -1,0 +1,55 @@
+<?php
+require '/var/lib/php/db.class.php';
+$db = create_db();
+
+$v_count = $db->select_row("SELECT COUNT(*) cnt FROM vhosts    WHERE modified > DATE_SUB(NOW(), INTERVAL 1 MINUTE)");
+$w_count = $db->select_row("SELECT COUNT(*) cnt FROM wildcards WHERE modified > DATE_SUB(NOW(), INTERVAL 1 MINUTE)");
+if(($v_count['cnt'] + $w_count['cnt']) <= 0) {
+	echo "Nothing to Run";
+	exit;
+}
+
+$apache_conf = '/etc/apache2/extra/httpd-vhosts.conf';
+
+$vhosts = $db->select_all("SELECT * FROM vhosts ORDER BY `is_default` ASC, `sort` ASC");
+
+$wildcards = $db->select_all("SELECT * FROM wildcards ORDER BY `sort` ASC");
+
+$defaults = array(
+	'ServerAdmin' => $_SERVER['USER'] . '@sidestudios.com',
+	'Allow from'  => 'all',
+	'Port'		  => '*',
+	'modified'	  => date('Y-m-d H:i:s'),
+	'is_default'  => 'N',
+	'default'	  => '*',
+);
+$default = false;
+
+$template = file_get_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'vhost.tpl');
+
+$out = '# File last loaded at ' . date('Y-m-d H:i:s') . "\n\n";
+foreach($vhosts as $vhost) {
+	$vhost = array_merge($defaults, $vhost);
+	$vhost['DocumentRoot'] = '"' . $vhost['DocumentRoot'] . '"';
+	foreach($wildcards as $wildcard) {
+		$this_vhost = $vhost;
+		$this_vhost['ServerName'] .= '.' . ltrim($wildcard['wildcard'], '.');
+		$aliases = preg_split('/\s+/', $this_vhost['ServerAlias']);
+		foreach($aliases as $key => $alias) {
+			$aliases[$key] .= '.' . ltrim($wildcard['wildcard'], '.');
+		}
+		$this_vhost['ServerAlias'] = implode(' ', array_unique($aliases));
+
+		$out .= template($this_vhost, $template);
+	}
+}
+file_put_contents($apache_conf, $out);
+echo shell_exec('/usr/sbin/apachectl restart');
+echo shell_exec('ssh scott@localhost \'/Applications/terminal-notifier.app/Contents/MacOS/terminal-notifier -message "Apache Restarted"\'');
+
+function template($values, $string) {
+	foreach($values as $key => $value) {
+		$string = str_replace('{{' . $key . '}}', $value, $string);
+	}
+	return $string;
+}
