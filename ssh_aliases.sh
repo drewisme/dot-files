@@ -5,7 +5,7 @@ alias home="htpc"
 
 # Work - Internal Clients
 work_servers=(iceman maverick goose)
-for server in "$billabong_servers[@]}"; do
+for server in "${work_servers[@]}"; do
 	alias $server="ssh ${server}.sidestudios.com"
 done
 
@@ -15,6 +15,6 @@ alias sidedev="ssh 192.168.0.50"
 
 # Work - Billabong
 billabong_servers=(sundown blade viper jester merlin stinger chipper)
-for server in "$billabong_servers[@]}"; do
+for server in "${billabong_servers[@]}"; do
 	alias $server="ssh ${server}.sidestudios.com"
 done
