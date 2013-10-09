@@ -1,5 +1,5 @@
 # Include other files
-for i in ~/Repositories/dot-files/*.sh; do
+for i in ~/dot-files/*.sh; do
 	source $i
 done
 
