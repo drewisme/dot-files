@@ -5,3 +5,6 @@ alias crontab="VIM_CRONTAB=true crontab"
 alias flushcache="sudo killall -HUP mDNSResponder && dscacheutil -flushcache && sudo dscacheutil -flushcache"
 alias phperrors="find . -type f -name '*.php' -or -name '*.ctp' -exec php -l {} \; | grep -v '^No'"
 alias fucking='sudo'
+# Aliases for Django work
+alias dj='python manage.py'
+alias djr='dj runserver'
