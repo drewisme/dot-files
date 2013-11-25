@@ -5,7 +5,7 @@ export LSCOLORS=Exfxcxdxbxegedabagacad
 # Paths
 export PATH="/usr/local/mysql/bin:$PATH"
 export PATH="/usr/local/sbin:$PATH"
-export PATH="/Users/scott/Repositories/cakephp/lib/Cake/Console:$PATH"
+export PATH="~/Sites/cakephp/lib/Cake/Console:$PATH"
 export PATH="/usr/sbin:$PATH"
 export PATH="/Applications/adt-bundle-mac-x86_64/sdk/platform-tools:$PATH"
 export PATH="/usr/local/bin:$PATH"
