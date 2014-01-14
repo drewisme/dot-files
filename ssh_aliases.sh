@@ -18,3 +18,12 @@ for cluster in "${billabong_clusters[@]}"; do
 		alias $server.$cluster="ssh ${server}.${cluster}.sidestudios.com"
 	done
 done
+
+# Work - Stokehouse Clusters
+stoke_clusters=(stokev stoked)
+stoke_servers=(lb1 fs1 db1 www1 www2 www3 www4 www5 cache1)
+for cluster in "${stoke_clusters[@]}"; do
+        for server in "${stoke_servers[@]}"; do
+                alias $server.$cluster="ssh ${server}.${cluster}.sidestudios.com"
+        done
+done
