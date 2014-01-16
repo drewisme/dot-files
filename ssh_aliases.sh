@@ -1,5 +1,5 @@
 # Work - Internal Clients
-work_servers=(iceman maverick goose)
+work_servers=(iceman maverick goose wolfman hollywood slider)
 for server in "${work_servers[@]}"; do
 	alias $server="ssh ${server}.sidestudios.com"
 done
