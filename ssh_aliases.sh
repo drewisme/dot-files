@@ -1,5 +1,5 @@
 # Work - Internal Clients
-work_servers=(iceman maverick goose)
+work_servers=(iceman maverick goose wolfman hollywood slider)
 for server in "${work_servers[@]}"; do
 	alias $server="ssh ${server}.sidestudios.com"
 done
@@ -12,9 +12,18 @@ done
 
 # Work - Billabong Clusters
 billabong_clusters=(bbg rvca)
-billabong_servers=(lb1 fs1 db1 www1 www2 www3 www4 www5 cache1)
+billabong_servers=(lb1 fs1 db1 www1 www2 www3 www4 www5 cache1 solr1)
 for cluster in "${billabong_clusters[@]}"; do
 	for server in "${billabong_servers[@]}"; do
 		alias $server.$cluster="ssh ${server}.${cluster}.sidestudios.com"
 	done
+done
+
+# Work - Stokehouse Clusters
+stoke_clusters=(stokev stoked)
+stoke_servers=(lb1 fs1 db1 www1 www2 www3 www4 www5 cache1)
+for cluster in "${stoke_clusters[@]}"; do
+        for server in "${stoke_servers[@]}"; do
+                alias $server.$cluster="ssh ${server}.${cluster}.sidestudios.com"
+        done
 done
