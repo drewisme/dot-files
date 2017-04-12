@@ -30,12 +30,14 @@ export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 export PROMPT_COMMAND="echo -ne \"\033]0;${USER}@${HOSTNAME}\007\"; $PROMPT_COMMAND"
 
 # Include other files
-for i in *.sh; do
+for i in ~/Repositories/dot-files/*.sh; do
 	source $i
 done
 
+# Autojump
 [[ $OSTYPE == darwin* && -s `brew --prefix`/etc/autojump.sh ]] && . `brew --prefix`/etc/autojump.sh
 
+# Autoenv
 [[ $OSTYPE == darwin* && -s `brew --prefix`/opt/autoenv/activate.sh ]] && source `brew --prefix`/opt/autoenv/activate.sh
 
 # Custom Prompt
