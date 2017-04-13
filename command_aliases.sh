@@ -41,7 +41,7 @@ if [[ $OSTYPE == darwin* ]]; then
 			echo -e "\thttp://${ip}:${port}"
 		done
 		open "http://localhost:${port}"
-		dj runserver 0.0.0.0:"$port"
+		python manage.py runserver 0.0.0.0:"$port"
 	}
 
 	# Big Three Update!
